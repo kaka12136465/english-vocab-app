@@ -1,0 +1,45 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ユーザー認証チェック用関数
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // 単語データ: 全認証済みユーザーが読み取り可能、書き込みは不可
+    match /words/{wordId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // 管理者のみコンソールから書き込み
+    }
+    
+    // ユーザー個別の単語データ: 自分のデータのみ読み書き可能
+    match /userWords/{wordId} {
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || 
+                      resource.data.isPublic == true);
+      
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid;
+      
+      allow update, delete: if isAuthenticated() && 
+                              resource.data.userId == request.auth.uid;
+    }
+    
+    // ユーザー進捗データ: 自分のデータのみ読み書き可能
+    match /userProgress/{progressId} {
+      allow read: if isAuthenticated() && 
+                     request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == request.resource.data.userId;
+      
+      allow update: if isAuthenticated() && 
+                       request.auth.uid == resource.data.userId;
+      
+      allow delete: if isAuthenticated() && 
+                       request.auth.uid == resource.data.userId;
+    }
+  }
+}
