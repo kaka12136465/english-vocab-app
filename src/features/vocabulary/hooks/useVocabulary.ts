@@ -9,7 +9,6 @@ import * as wordBookService from '../services/wordBookService';
  */
 export const useVocabulary = (wordBookId: string | null) => {
   const [words, setWords] = useState<Word[]>([]);
-  const [userWords, setUserWords] = useState<UserWord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

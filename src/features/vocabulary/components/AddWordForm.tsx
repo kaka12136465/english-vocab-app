@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AddWordFormData } from '../types/vocabulary.types';
 
 interface AddWordFormProps {
@@ -17,6 +17,18 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === ";") {
+        event.preventDefault();
+        handleSubmit();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [formData])
 
   // 日本語訳の追加
   const addJapaneseField = () => {
@@ -58,8 +70,11 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
+    if(formData.japanese.length === 0 || formData.english === "" ){
+      setError("英単語と日本語訳は必須です")
+      return;
+    }
     setError('');
     setLoading(true);
 
@@ -84,7 +99,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
+    <form onSubmit={(e) => {e.preventDefault();handleSubmit()}} className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">新しい単語を追加</h2>
 
       <div className="space-y-6">
@@ -228,18 +243,6 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
           />
         </div>
 
-        {/* 公開設定 */}
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="isPublic"
-            className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
-          />
-          <label htmlFor="isPublic" className="text-sm text-gray-700">
-            この単語を他のユーザーと共有する（将来実装予定）
-          </label>
-        </div>
-
         {/* ボタン */}
         <div className="flex gap-3">
           <button
@@ -247,7 +250,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
             disabled={loading}
             className="flex-1 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? '追加中...' : '追加'}
+            {loading ? '追加中...' : '追加 (Ctrl + ; )'}
           </button>
           <button
             type="button"

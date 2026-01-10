@@ -7,6 +7,7 @@ import {
   query,
   where,
   serverTimestamp,
+  deleteDoc,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Word, WordBook } from '@/types';
@@ -180,7 +181,19 @@ export const addWordBook = async (
   }
 };
 
-
+/**
+ * 指定したIDの単語を削除
+ */
+export const deleteWord = async (wordId: string) => {
+  try{
+    await deleteDoc(doc(db, WORDS_COLLECTION, wordId));
+    console.log("データを削除しました", wordId);
+    return wordId;
+  }catch (error: any) {
+    console.error("Error delete word:", error);
+    throw new Error(error.message || "単語の削除に失敗しました")
+  }
+}
 
 
 

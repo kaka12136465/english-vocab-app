@@ -1,30 +1,40 @@
 import { useState } from "react";
 import { Word } from "@/types";
 import { Timestamp } from "firebase/firestore";
-
 // 単語カードコンポーネント
 interface WordCardProps {
   word: Word;
+  onDeleteWord: (wordId: string) => Promise<string>
 }
 
-export const WordCard: React.FC<WordCardProps> = ({ word }) => {
+export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord}) => {
   const [showDetails, setShowDetails] = useState(false);
 
   return (
     <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4">
       <div className="flex justify-between items-start mb-2">
-        <div>
+        <span>
           <h3 className="text-xl font-bold text-gray-800">{word.english}</h3>
           {word.pronunciation && (
             <p className="text-sm text-gray-500">[{word.pronunciation}]</p>
           )}
+        </span>
+        
+        <div className="flex flex-col gap-2">
+          <button 
+            onClick={async () => {await onDeleteWord(word.id)}}
+            className="text-primary-600 hover:text-primary-700 text-sm font-medium color-red"
+            >
+            削除
+          </button> 
+
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+          >
+            {showDetails ? '閉じる' : '詳細'}
+          </button>
         </div>
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-        >
-          {showDetails ? '閉じる' : '詳細'}
-        </button>
       </div>
 
       <div className="space-y-2">

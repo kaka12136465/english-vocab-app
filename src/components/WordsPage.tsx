@@ -3,6 +3,7 @@ import { AddWordForm } from '@/features/vocabulary/components/AddWordForm';
 import { useVocabulary } from '@/features/vocabulary/hooks/useVocabulary';
 import { AddWordFormData} from '@/features/vocabulary/types/vocabulary.types';
 import { WordCard } from '@/features/vocabulary/components/WordCard';
+import { deleteWord } from '@/features/vocabulary/services/vocabularyService';
 
 interface WordsPageProps {
   wordBookId: string;
@@ -25,6 +26,12 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
     }*/
     return success;
   };
+
+  const handleDeleteWord = async (wordId: string) => {
+    const success = await deleteWord(wordId);
+    loadWordsInWordBook();
+    return success
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
@@ -126,7 +133,7 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {words.map((word) => (
-                <WordCard key={word.id} word={word} />
+                <WordCard key={word.id} word={word} onDeleteWord={handleDeleteWord}/>
               ))}
             </div>
           </div>
