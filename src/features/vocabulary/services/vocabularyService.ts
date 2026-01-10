@@ -9,11 +9,12 @@ import {
   serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Word } from '@/types';
+import { Word, WordBook } from '@/types';
 import { AddWordFormData, UserWord, WordValidationResult } from '../types/vocabulary.types';
 
 const WORDS_COLLECTION = 'words';
 const USER_WORDS_COLLECTION = 'userWords';
+const WORD_BOOKS_COLLECTION = 'wordBooks';
 
 /**
  * 単語IDから単語データを取得
@@ -71,7 +72,7 @@ export const getRandomWords = async (count: number): Promise<Word[]> => {
 };
 
 /**
- * 指定されたIDの単語リストを取得
+ * 指定されたIDリストの単語リストを取得
  */
 export const getWordsByIds = async (wordIds: string[]): Promise<Word[]> => {
   try {
@@ -139,6 +140,57 @@ export const validateWord = (formData: AddWordFormData): WordValidationResult =>
 };
 
 /**
+ * すべての単語帳を取得
+ */
+export const getAllWordBooks = async (userId: string): Promise<WordBook[]> => {
+  try {
+    const querySnapshot = await getDocs(collection(db, WORD_BOOKS_COLLECTION));
+    return querySnapshot.docs.map(doc => {
+        if(doc.data() && doc.data().ownerId === userId) return {
+        id: doc.id,
+        ...doc.data()
+    } as WordBook;
+    }).filter(Boolean) as WordBook[];
+  } catch (error) {
+    console.error('Error fetching word books:', error);
+    throw new Error('単語帳の取得に失敗しました');
+  }
+};
+
+/**
+ * 単語帳を追加
+ */
+export const addWordBook = async (
+  name: string,
+  description: string,
+  ownerId: string
+): Promise<string> => {
+  try {
+    const docRef = await addDoc(collection(db, WORD_BOOKS_COLLECTION), {
+      name: name.trim(),
+      description: description.trim(),
+      ownerId,
+      createdAt: serverTimestamp(),
+    });
+
+    return docRef.id;
+  } catch (error: any) {
+    console.error('Error adding word book:', error);
+    throw new Error(error.message || '単語帳の追加に失敗しました');
+  }
+};
+
+
+
+
+
+
+
+
+
+
+
+/**
  * ユーザー個別の単語を追加（マイ単語帳）
  */
 export const addUserWord = async (
@@ -163,6 +215,7 @@ export const addUserWord = async (
       pronunciation: formData.pronunciation.trim(),
       audioUrl: '',
       isPublic,
+      wordBookId: '', // 必要に応じて単語帳IDを設定
     };
 
     const docRef = await addDoc(collection(db, USER_WORDS_COLLECTION), {
@@ -205,6 +258,7 @@ export const getUserWords = async (userId: string): Promise<UserWord[]> => {
   }
 };
 
+
 /**
  * ユーザーの単語と共通単語を統合して取得
  */
@@ -230,6 +284,7 @@ export const getAllWordsForUser = async (userId: string): Promise<Word[]> => {
       pronunciation: uw.pronunciation,
       audioUrl: uw.audioUrl,
       createdAt: uw.createdAt,
+      wordBookId: uw.wordBookId,
     }));
 
     return [...commonWords, ...userWordsAsWords];

@@ -1,28 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { AddWordForm } from '@/features/vocabulary/components/AddWordForm';
-import { useVocabulary } from '@/features/vocabulary/hooks/useVocabulary';
-import { UserWord } from '@/features/vocabulary/types/vocabulary.types';
+import { AddWordBookForm } from '@/features/vocabulary/components/AddWordBookForm';
+import { useWordBook } from '@/features/vocabulary/hooks/useWordBook';
+import { WordBookCard } from '@/features/vocabulary/components/WordBookCard';
 
-interface MyWordsPageProps {
+interface WordBooksPageProps {
   userId: string;
   onBack: () => void;
+  onOpenWords: (wordBookId:string) => void;
 }
 
-export const MyWordsPage: React.FC<MyWordsPageProps> = ({ userId, onBack }) => {
-  const { userWords, loading, error, loadUserWords, addWord } = useVocabulary(userId);
+export const WordBooksPage: React.FC<WordBooksPageProps> = ({ userId, onBack, onOpenWords }) => {
+  const { wordBooks, loading, error, loadAllWordBooks } = useWordBook(userId);
   const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
-    loadUserWords();
-  }, [loadUserWords]);
+    loadAllWordBooks(userId);
+  }, []);
 
-  const handleAddWord = async (formData: any, isPublic: boolean) => {
-    const success = await addWord(formData, isPublic);
-    if (success) {
-      setShowAddForm(false);
-    }
-    return success;
-  };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
@@ -43,7 +38,7 @@ export const MyWordsPage: React.FC<MyWordsPageProps> = ({ userId, onBack }) => {
               </svg>
               戻る
             </button>
-            <h1 className="text-2xl font-bold text-gray-800">マイ単語帳</h1>
+            <h1 className="text-2xl font-bold text-gray-800">単語帳</h1>
           </div>
         </div>
       </header>
@@ -70,7 +65,7 @@ export const MyWordsPage: React.FC<MyWordsPageProps> = ({ userId, onBack }) => {
                   clipRule="evenodd"
                 />
               </svg>
-              新しい単語を追加
+              単語帳を追加
             </button>
           </div>
         )}
@@ -78,8 +73,8 @@ export const MyWordsPage: React.FC<MyWordsPageProps> = ({ userId, onBack }) => {
         {/* 追加フォーム */}
         {showAddForm && (
           <div className="mb-6">
-            <AddWordForm
-              onSubmit={handleAddWord}
+            <AddWordBookForm
+              onCreated={() => setShowAddForm(false)}
               onCancel={() => setShowAddForm(false)}
             />
           </div>
@@ -94,7 +89,7 @@ export const MyWordsPage: React.FC<MyWordsPageProps> = ({ userId, onBack }) => {
         )}
 
         {/* 単語リスト */}
-        {!loading && userWords.length === 0 && !showAddForm && (
+        {!loading && wordBooks.length === 0 && !showAddForm && (
           <div className="text-center py-12 bg-white rounded-lg shadow">
             <svg
               className="mx-auto h-12 w-12 text-gray-400 mb-4"
@@ -114,17 +109,17 @@ export const MyWordsPage: React.FC<MyWordsPageProps> = ({ userId, onBack }) => {
           </div>
         )}
 
-        {!loading && userWords.length > 0 && (
+        {!loading && wordBooks.length > 0 && (
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-800">
-                登録単語: {userWords.length}件
+                登録単語: {wordBooks.length}件
               </h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {userWords.map((word) => (
-                <WordCard key={word.id} word={word} />
+              {wordBooks.map((wordBook) => (
+                <WordBookCard key={wordBook.id} wordBook={wordBook} onOpenWords={onOpenWords} />
               ))}
             </div>
           </div>
@@ -134,68 +129,4 @@ export const MyWordsPage: React.FC<MyWordsPageProps> = ({ userId, onBack }) => {
   );
 };
 
-// 単語カードコンポーネント
-interface WordCardProps {
-  word: UserWord;
-}
 
-const WordCard: React.FC<WordCardProps> = ({ word }) => {
-  const [showDetails, setShowDetails] = useState(false);
-
-  return (
-    <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4">
-      <div className="flex justify-between items-start mb-2">
-        <div>
-          <h3 className="text-xl font-bold text-gray-800">{word.english}</h3>
-          {word.pronunciation && (
-            <p className="text-sm text-gray-500">[{word.pronunciation}]</p>
-          )}
-        </div>
-        <button
-          onClick={() => setShowDetails(!showDetails)}
-          className="text-primary-600 hover:text-primary-700 text-sm font-medium"
-        >
-          {showDetails ? '閉じる' : '詳細'}
-        </button>
-      </div>
-
-      <div className="space-y-2">
-        <div>
-          <p className="text-sm text-gray-600">日本語訳:</p>
-          <p className="text-gray-800">{word.japanese.join(', ')}</p>
-        </div>
-
-        {showDetails && (
-          <>
-            {word.synonyms.length > 0 && (
-              <div>
-                <p className="text-sm text-gray-600">類義語:</p>
-                <p className="text-gray-800">{word.synonyms.join(', ')}</p>
-              </div>
-            )}
-
-            {word.antonyms.length > 0 && (
-              <div>
-                <p className="text-sm text-gray-600">対義語:</p>
-                <p className="text-gray-800">{word.antonyms.join(', ')}</p>
-              </div>
-            )}
-
-            {word.exampleSentence && (
-              <div>
-                <p className="text-sm text-gray-600">例文:</p>
-                <p className="text-gray-800 italic">{word.exampleSentence}</p>
-              </div>
-            )}
-
-            <div className="pt-2 border-t border-gray-200">
-              <p className="text-xs text-gray-500">
-                登録日: {word.createdAt?.toLocaleDateString('ja-JP')}
-              </p>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-};

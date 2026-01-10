@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { AddWordFormData } from '../types/vocabulary.types';
 
 interface AddWordFormProps {
-  onSubmit: (formData: AddWordFormData, isPublic: boolean) => Promise<boolean>;
+  onSubmit: (formData: AddWordFormData) => Promise<boolean>;
   onCancel: () => void;
 }
 
@@ -15,7 +15,6 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
     exampleSentence: '',
     pronunciation: '',
   });
-  const [isPublic, setIsPublic] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
@@ -65,7 +64,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
     setLoading(true);
 
     try {
-      const success = await onSubmit(formData, isPublic);
+      const success = await onSubmit(formData);
       if (success) {
         // フォームをリセット
         setFormData({
@@ -76,7 +75,6 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
           exampleSentence: '',
           pronunciation: '',
         });
-        setIsPublic(false);
       }
     } catch (err: any) {
       setError(err.message);
@@ -86,10 +84,10 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">新しい単語を追加</h2>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-6">
         {error && (
           <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md">
             {error}
@@ -235,8 +233,6 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
           <input
             type="checkbox"
             id="isPublic"
-            checked={isPublic}
-            onChange={(e) => setIsPublic(e.target.checked)}
             className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
           />
           <label htmlFor="isPublic" className="text-sm text-gray-700">
@@ -251,7 +247,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
             disabled={loading}
             className="flex-1 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? '追加中...' : '単語を追加'}
+            {loading ? '追加中...' : '追加'}
           </button>
           <button
             type="button"
@@ -261,7 +257,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
             キャンセル
           </button>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   );
 };

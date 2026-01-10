@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { AuthPage } from './components/AuthPage';
 import { HomePage } from './components/HomePage';
 import { QuizPage } from './components/QuizPage';
-import { MyWordsPage } from './components/MyWordsPage';
+import { WordsPage } from './components/WordsPage';
 import { useAuth } from './features/auth/hooks/useAuth';
 import { QuizMode} from './types';
 import { LoginFormData } from './features/auth/types/auth.types';
+import { WordBooksPage } from './components/WordBooksPage';
 
-type AppPage = 'auth' | 'home' | 'quiz' | 'mywords';
+type AppPage = 'auth' | 'home' | 'quiz' | 'wordBooks' | 'words';
 
 function App() {
   const { user, loading, signIn, signUp, signOut } = useAuth();
@@ -15,6 +16,7 @@ function App() {
   const [quizMode, setQuizMode] = useState<QuizMode>('english-to-japanese');
   const [wordCount, setWordCount] = useState<number>(10);
   const [isLoadingWords, setIsLoadingWords] = useState(false);
+  const [selectedWordBookId, setSelectedWordBookId] = useState<string>('');
 
   // ユーザーの認証状態に応じてページを切り替え
   useEffect(() => {
@@ -58,9 +60,15 @@ function App() {
     }
   };
 
-  // マイ単語帳を開く
-  const handleOpenMyWords = () => {
-    setCurrentPage('mywords');
+  // マイ単語帳一覧を開く
+  const handleOpenWordBooks = () => {
+    setCurrentPage('wordBooks');
+  };
+
+  // 単語帳を開く
+  const handleOpenWords = (wordBookId: string) => {
+    setSelectedWordBookId(wordBookId);
+    setCurrentPage('words');
   };
 
   // ホームに戻る
@@ -103,16 +111,21 @@ function App() {
           userName={user?.email || ''}
           onStartQuiz={handleStartQuiz}
           onLogout={handleLogout}
-          onOpenMyWords={handleOpenMyWords}
+          onOpenWordBooks={handleOpenWordBooks}
         />
       );
     
     case 'quiz':
       return <QuizPage userId={user?.uid || null} onBackToHome={handleBackToHome} mode={quizMode} wordCount={wordCount} />;
     
-    case 'mywords':
+    case 'wordBooks':
       return user ? (
-        <MyWordsPage userId={user.uid} onBack={handleBackToHome} />
+        <WordBooksPage userId={user.uid} onBack={handleBackToHome} onOpenWords={handleOpenWords} />
+      ) : null;
+
+    case 'words':
+      return user ? (
+        <WordsPage wordBookId={selectedWordBookId} onBack={handleOpenWordBooks} />
       ) : null;
     
     default:

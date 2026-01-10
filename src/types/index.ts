@@ -8,7 +8,17 @@ export interface Word {
   exampleSentence: string;
   pronunciation: string;
   audioUrl: string;
-  createdAt?: Date;
+  createdAt?: Date; // 作成日時（オプション）
+  wordBookId: string; // この単語を所有している単語帳のID
+}
+
+// 単語帳データ型
+export interface WordBook {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: Date;
+  ownerId: string; // 単語帳の所有者ユーザーID
 }
 
 // ユーザーの学習進捗データ型
