@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Word, QuizMode } from '@/types';
-import { QuizState, QuizConfig, QuizAnswer } from '../types/quiz.types';
+import { QuizState, QuizAnswer } from '../types/quiz.types';
 import * as quizService from '../services/quizService';
 import * as progressService from '@/features/userProgress/services/progressService';
 
@@ -26,17 +26,18 @@ export const useQuiz = (userId: string | null) => {
     const questions = selectedWords.map(word => 
       quizService.generateQuestion(word, mode)
     );
-    setInitialQuizState({
+
+    const newQuizState: QuizState = {
       config: { mode, wordCount },
       questions: questions,
       currentQuestionIndex: 0,
       answers: [],
       isComplete: false,
-    });
+    };
 
-    console.log("Starting quiz with questions:", questions);
-    
-    setQuizState(initialQuizState);
+    setInitialQuizState(newQuizState);
+    setQuizState(newQuizState);
+    return newQuizState;
   }, []);
   
 
@@ -73,14 +74,18 @@ export const useQuiz = (userId: string | null) => {
     const newAnswers = [...quizState.answers, answer];
     const isLastQuestion = quizState.currentQuestionIndex === quizState.questions.length - 1;
 
-    setQuizState(prev => ({
-      ...prev,
+    const newQuizState: QuizState = {
+      ...quizState,
       answers: newAnswers,
-      currentQuestionIndex: isLastQuestion ? prev.currentQuestionIndex : prev.currentQuestionIndex + 1,
+      currentQuestionIndex: isLastQuestion ? quizState.currentQuestionIndex : quizState.currentQuestionIndex + 1,
       isComplete: isLastQuestion,
-    }));
+    };
 
-    return isCorrect;
+    setQuizState(newQuizState);
+
+    console.log("submit", newQuizState);
+
+    return {newQuizState,isCorrect};
   }, [quizState, userId]);
 
   /**

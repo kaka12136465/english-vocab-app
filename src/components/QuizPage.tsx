@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { QuizCard } from '@/features/quiz/components/QuizCard';
 import { QuizResult } from '@/features/quiz/components/QuizResult';
 import { useQuiz } from '@/features/quiz/hooks/useQuiz';
 import { QuizMode } from '@/types';
 import { getAllWordsForUser } from '@/features/vocabulary/services/vocabularyService';
+import { QuizState } from '@/features/quiz/types/quiz.types';
 
 interface QuizPageProps {
   userId: string | null;
@@ -13,8 +14,9 @@ interface QuizPageProps {
 }
 
 export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, wordCount }) => {
+  // quizStateの変更が反映されていない
   const {
-    quizState,
+    quizState: initialQuizState,
     currentQuestion,
     submitAnswer,
     nextQuestion,
@@ -23,6 +25,8 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
     getQuizSummary,
     startQuiz,
   } = useQuiz(userId);
+  const [quizState, setQuizState] = useState<QuizState>(initialQuizState);
+  console.log("quizState",quizState.currentQuestionIndex, quizState);
 
   useEffect(() => {
     const start = async () => {
@@ -30,18 +34,20 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
         if (!userId) return;
         const words = await getAllWordsForUser(userId);
 
-        console.log("Fetched words:", words);
-
         // ランダムにシャッフル
         const shuffled = [...words].sort(() => 0.5 - Math.random());
         const selectedWords = shuffled.slice(0, Math.min(wordCount, shuffled.length));
-        startQuiz(selectedWords, mode, wordCount);
+
+        // ここでquizStateを変更したい
+        const newQuizState = startQuiz(selectedWords, mode, wordCount);
+        setQuizState(newQuizState);
       } catch (error) {
         console.error("Error fetching words:", error);
       }
     };
     start(); 
   }, []);
+
 
   // クイズが完了している場合は結果画面を表示
   if (quizState.isComplete) {
@@ -62,6 +68,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
   // クイズ実施中の場合
   if (currentQuestion && quizState.config) {
     const isAudioMode = quizState.config.mode === 'audio-to-japanese';
+    console.log("currentQuizState", quizState);
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 py-12 px-4">
@@ -86,7 +93,11 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
           question={currentQuestion}
           questionNumber={quizState.currentQuestionIndex + 1}
           totalQuestions={quizState.questions.length}
-          onSubmit={async (answer) => (await submitAnswer(answer)) ?? false}
+          onSubmit={async (answer) => {
+            const {newQuizState: newQuizState, isCorrect: isCorrect} = await submitAnswer(answer) ?? {newQuizState: quizState, isCorrect: false};
+            setQuizState(newQuizState);
+            return {newQuizState, isCorrect};
+          }}
           onNext={nextQuestion}
           isAudioMode={isAudioMode}
           onPlayAudio={isAudioMode ? playQuestionAudio : undefined}

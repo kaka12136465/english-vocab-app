@@ -1,4 +1,4 @@
-import { Word, QuizMode, QuizResult } from '@/types';
+import { Word, QuizMode} from '@/types';
 
 // クイズの設定
 export interface QuizConfig {

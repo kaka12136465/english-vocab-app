@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { QuizQuestionData } from '../types/quiz.types';
+import { QuizQuestionData, QuizState } from '../types/quiz.types';
 
 interface QuizCardProps {
   question: QuizQuestionData;
   questionNumber: number;
   totalQuestions: number;
-  onSubmit: (answer: string) => Promise<boolean>;
+  onSubmit: (answer: string) => Promise<{newQuizState: QuizState, isCorrect: boolean}>;
   onNext: () => void;
   isAudioMode: boolean;
   onPlayAudio?: () => void;
@@ -34,15 +34,11 @@ export const QuizCard: React.FC<QuizCardProps> = ({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!userAnswer.trim()) {
-      alert('回答を入力してください');
-      return;
-    }
 
     setLoading(true);
     try {
-      const correct = await onSubmit(userAnswer);
+      console.log("qNum", questionNumber);
+      const {isCorrect: correct} = await onSubmit(userAnswer);
       setIsCorrect(correct);
       setIsSubmitted(true);
     } catch (error) {

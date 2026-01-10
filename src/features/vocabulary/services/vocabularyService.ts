@@ -5,8 +5,6 @@ import {
   getDocs,
   addDoc,
   query,
-  limit,
-  orderBy,
   where,
   serverTimestamp,
 } from 'firebase/firestore';
@@ -189,9 +187,7 @@ export const getUserWords = async (userId: string): Promise<UserWord[]> => {
       where('userId', '==', userId),
       //orderBy('createdAt', 'desc')
     );
-    console.log('Fetching words for userId:', userId);
     const querySnapshot = await getDocs(q);
-    console.log('Fetched user words:', querySnapshot.size);
 
     
     
