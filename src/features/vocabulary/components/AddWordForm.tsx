@@ -113,8 +113,8 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
     const newFormData: AddWordFormData = {
       english: word.english,
       japanese: [],
-      antonyms: word.antonyms,
-      synonyms: word.synonyms,
+      antonyms: Array.from(word.antonyms),
+      synonyms: Array.from(word.synonyms),
       exampleSentence: word.exampleSentence,
       pronunciation: word.pronunciation,
     }

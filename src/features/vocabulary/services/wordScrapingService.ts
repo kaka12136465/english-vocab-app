@@ -1,9 +1,9 @@
 // wordScrapingService.ts
 interface ScrapingWordData {
   english: string;
-  japanese: string[];
-  synonyms: string[];
-  antonyms: string[];
+  japanese: Set<string>;
+  synonyms: Set<string>;
+  antonyms: Set<string>;
   exampleSentence: string;
   pronunciation: string;
   isFound: boolean;
@@ -34,10 +34,10 @@ export async function scrapeWeblio(word: string): Promise<ScrapingWordData> {
       return {
           isFound: false,
           english: "",
-          synonyms: [],
-          antonyms: [],
+          synonyms: new Set<string>(),
+          antonyms: new Set<string>(),
           pronunciation: "",
-          japanese: [],
+          japanese: new Set<string>(),
           exampleSentence: "",
       }
     }
@@ -49,13 +49,13 @@ export async function scrapeWeblio(word: string): Promise<ScrapingWordData> {
 
   const allSynonyms = new Set<string>();
   const allAntonyms = new Set<string>();
-  const meanings: string[] = [];
+  const meanings: Set<string> = new Set<string>();
   const examples: string[] = [];
   const isFound: boolean = true;
 
   entry.meanings.forEach((meaning) => {
     meaning.definitions.forEach((def) => {
-      meanings.push(def.definition);
+      meanings.add(def.definition);
       if (def.example) examples.push(def.example);
       def.synonyms?.forEach((s) => allSynonyms.add(s));
       def.antonyms?.forEach((a) => allAntonyms.add(a));
@@ -67,8 +67,8 @@ export async function scrapeWeblio(word: string): Promise<ScrapingWordData> {
   return {
     english: entry.word,
     japanese: meanings, // 英語の定義
-    synonyms: Array.from(allSynonyms),
-    antonyms: Array.from(allAntonyms),
+    synonyms: allSynonyms,
+    antonyms: allAntonyms,
     exampleSentence: examples[0] || "",
     pronunciation: entry.phonetic || "",
     isFound,
