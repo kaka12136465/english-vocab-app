@@ -19,6 +19,8 @@ interface DictionaryAPIResponse {
       synonyms?: string[];
       antonyms?: string[];
     }>;
+    synonyms?: string[];
+    antonyms?: string[];
   }>;
 }
 
@@ -58,6 +60,8 @@ export async function scrapeWeblio(word: string): Promise<ScrapingWordData> {
       def.synonyms?.forEach((s) => allSynonyms.add(s));
       def.antonyms?.forEach((a) => allAntonyms.add(a));
     });
+    meaning.synonyms?.forEach((s) => allSynonyms.add(s));
+    meaning.antonyms?.forEach((a) => allAntonyms.add(a));
   });
 
   return {
