@@ -119,6 +119,8 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
       pronunciation: word.pronunciation,
     }
     setFormData(newFormData);
+    console.log("scraping", word);
+    console.log("formData", formData);
   }
 
   return (

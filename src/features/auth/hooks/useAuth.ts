@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { AuthState, User, mapFirebaseUser } from '../types/auth.types';
+import { AuthState, mapFirebaseUser } from '../types/auth.types';
 import * as authService from '../services/authService';
 
 /**

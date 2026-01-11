@@ -1,8 +1,7 @@
 import { db } from "@/lib/firebase";
-import { Word, WordBook } from "@/types";
-import { addDoc, collection, getDocs, serverTimestamp } from "firebase/firestore";
+import { Word } from "@/types";
+import { addDoc, collection, getDocs } from "firebase/firestore";
 
-const WORD_BOOKS_COLLECTION = "wordBooks";
 const WORDS_COLLECTION = "words";
 
 

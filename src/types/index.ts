@@ -6,7 +6,7 @@ export interface Word {
   synonyms: string[];
   antonyms: string[];
   exampleSentence: string;
-  pronunciation: string;
+  pronunciation: string; // 発音
   audioUrl: string;
   createdAt?: Date; // 作成日時（オプション）
   wordBookId: string; // この単語を所有している単語帳のID

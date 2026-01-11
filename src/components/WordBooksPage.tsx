@@ -10,7 +10,7 @@ interface WordBooksPageProps {
 }
 
 export const WordBooksPage: React.FC<WordBooksPageProps> = ({ userId, onBack, onOpenWords }) => {
-  const { wordBooks, loading, error, loadAllWordBooks } = useWordBook(userId);
+  const { wordBooks, loading, error, loadAllWordBooks } = useWordBook();
   const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {

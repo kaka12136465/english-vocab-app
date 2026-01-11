@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Word } from '@/types';
-import { AddWordFormData, UserWord } from '../types/vocabulary.types';
+import { AddWordFormData } from '../types/vocabulary.types';
 import * as vocabularyService from '../services/vocabularyService';
 import * as wordBookService from '../services/wordBookService';
 

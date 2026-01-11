@@ -2,7 +2,7 @@ import { WordBook } from "@/types";
 import { useState } from "react";
 import { getAllWordBooks } from "../services/vocabularyService";
 
-export const useWordBook = (userId: string) => {
+export const useWordBook = () => {
     const [wordBooks, setWordBooks] = useState<WordBook[]>([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
