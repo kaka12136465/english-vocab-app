@@ -9,12 +9,12 @@ interface WordBooksPageProps {
   onOpenWords: (wordBookId:string) => void;
 }
 
-export const WordBooksPage: React.FC<WordBooksPageProps> = ({ userId, onBack, onOpenWords }) => {
+export const WordBooksPage: React.FC<WordBooksPageProps> = ({onBack, onOpenWords }) => {
   const { wordBooks, loading, error, loadAllWordBooks } = useWordBook();
   const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
-    loadAllWordBooks(userId);
+    loadAllWordBooks();
   }, []);
 
 

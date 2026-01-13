@@ -143,11 +143,11 @@ export const validateWord = (formData: AddWordFormData): WordValidationResult =>
 /**
  * すべての単語帳を取得
  */
-export const getAllWordBooks = async (userId: string): Promise<WordBook[]> => {
+export const getAllWordBooks = async (): Promise<WordBook[]> => {
   try {
     const querySnapshot = await getDocs(collection(db, WORD_BOOKS_COLLECTION));
     return querySnapshot.docs.map(doc => {
-        if(doc.data() && doc.data().ownerId === userId) return {
+        if(doc.data()) return {
         id: doc.id,
         ...doc.data()
     } as WordBook;
@@ -201,7 +201,20 @@ export const deleteWord = async (wordId: string) => {
 
 
 
-
+export const getAllUserWordBooks = async (userId: string): Promise<WordBook[]> => {
+  try {
+    const querySnapshot = await getDocs(collection(db, WORD_BOOKS_COLLECTION));
+    return querySnapshot.docs.map(doc => {
+        if(doc.data() && doc.data().uid == userId) return {
+        id: doc.id,
+        ...doc.data()
+    } as WordBook;
+    }).filter(Boolean) as WordBook[];
+  } catch (error) {
+    console.error('Error fetching word books:', error);
+    throw new Error('単語帳の取得に失敗しました');
+  }
+};
 
 /**
  * ユーザー個別の単語を追加（マイ単語帳）

@@ -7,11 +7,11 @@ export const useWordBook = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const loadAllWordBooks = async (userId: string) => {
+    async function loadAllWordBooks(): Promise<void>{
         setLoading(true);
         setError(null);
         try {
-            const fetchedWordBooks: WordBook[] = await getAllWordBooks(userId);
+            const fetchedWordBooks: WordBook[] = await getAllWordBooks();
             setWordBooks(fetchedWordBooks);
         } catch (err: any) {
             setError(err.message);

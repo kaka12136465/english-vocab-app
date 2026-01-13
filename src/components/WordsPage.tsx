@@ -52,7 +52,7 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
               </svg>
               戻る
             </button>
-            <h1 className="text-2xl font-bold text-gray-800">マイ単語帳</h1>
+            <h1 className="text-2xl font-bold text-gray-800">単語帳</h1>
           </div>
         </div>
       </header>
