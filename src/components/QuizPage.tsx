@@ -3,17 +3,18 @@ import { QuizCard } from '@/features/quiz/components/QuizCard';
 import { QuizResult } from '@/features/quiz/components/QuizResult';
 import { useQuiz } from '@/features/quiz/hooks/useQuiz';
 import { QuizMode } from '@/types';
-import { getAllWordsForUser } from '@/features/vocabulary/services/vocabularyService';
 import { QuizState } from '@/features/quiz/types/quiz.types';
+import { getWordsInWordBook } from '@/features/vocabulary/services/wordBookService';
 
 interface QuizPageProps {
   userId: string | null;
   onBackToHome: () => void;
   mode: QuizMode;
   wordCount: number;
+  wordBookId: string;
 }
 
-export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, wordCount }) => {
+export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, wordCount, wordBookId }) => {
   // quizStateの変更が反映されていない
   const {
     quizState: initialQuizState,
@@ -32,7 +33,8 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
     const start = async () => {
       try {
         if (!userId) return;
-        const words = await getAllWordsForUser(userId);
+        console.log("wordBook", wordBookId);
+        const words = await getWordsInWordBook(wordBookId);
 
         // ランダムにシャッフル
         const shuffled = [...words].sort(() => 0.5 - Math.random());

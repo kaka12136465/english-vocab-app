@@ -1,16 +1,19 @@
-import React, { useState} from 'react';
-import { QuizMode } from '@/types';
+import React, { useEffect, useState} from 'react';
+import { QuizMode, WordBook } from '@/types';
+import { getAllWordBooks } from '@/features/vocabulary/services/vocabularyService';
 
 interface HomePageProps {
   userName: string | null;
-  onStartQuiz: (mode: QuizMode, wordCount: number) => void;
+  onStartQuiz: (mode: QuizMode, wordCount: number, wordBookId: string) => void;
   onLogout: () => void;
   onOpenWordBooks: () => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({ userName, onStartQuiz, onLogout,onOpenWordBooks }) => {
   const [selectedMode, setSelectedMode] = useState<QuizMode>('english-to-japanese');
+  const [selectedWordBookIndex, setSelectedWordBookIndex] = useState<number>(0);
   const [wordCount, setWordCount] = useState(10);
+  const [wordBooks, setWordBooks] = useState<WordBook[]>([]);
 
   const quizModes: { value: QuizMode; label: string; description: string; icon: string }[] = [
     {
@@ -33,12 +36,26 @@ export const HomePage: React.FC<HomePageProps> = ({ userName, onStartQuiz, onLog
     },
   ];
 
+  useEffect (() => {
+    const fetchWordBooks = async () => {
+      const wordBooks: WordBook[] = await getAllWordBooks();
+      console.log(wordBooks);
+      setWordBooks(wordBooks);
+    }
+    fetchWordBooks();
+  }, []);
+
   const handleStartQuiz = () => {
     if (wordCount < 1 || wordCount > 50) {
       alert('出題数は1〜50の範囲で設定してください');
       return;
     }
-    onStartQuiz(selectedMode, wordCount);
+    if(wordBooks.length === 0){
+      console.error("単語帳が存在しません");
+      return;
+    }
+    console.log("selectedWordBookId", wordBooks[selectedWordBookIndex].id);
+    onStartQuiz(selectedMode, wordCount, wordBooks[selectedWordBookIndex].id);
   };
 
   return (
@@ -86,9 +103,23 @@ export const HomePage: React.FC<HomePageProps> = ({ userName, onStartQuiz, onLog
               学習したいモードを選んでクイズを開始しましょう
             </p>
           </div>
-
-          {/* モード選択 */}
+          
+          
           <div className="space-y-4 mb-8">
+            {/* 単語帳選択 */}
+            <select 
+              value={selectedWordBookIndex} 
+              onChange={(e) => {setSelectedWordBookIndex(Number(e.target.value));console.log(wordBooks[Number(e.target.value)]);}}
+              className="px-4 py-2 border rounded"
+            >
+              {wordBooks.map((item: WordBook, index) => (
+                <option key={index} value={index}>
+                  {item.name}
+                </option>
+                ))}
+            </select>
+
+            {/* モード選択 */}
             {quizModes.map((mode) => (
               <button
                 key={mode.value}

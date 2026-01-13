@@ -16,7 +16,8 @@ function App() {
   const [quizMode, setQuizMode] = useState<QuizMode>('english-to-japanese');
   const [wordCount, setWordCount] = useState<number>(10);
   const [isLoadingWords, setIsLoadingWords] = useState(false);
-  const [selectedWordBookId, setSelectedWordBookId] = useState<string>('');
+  const [selectedWordBookIdForWords, setSelectedWordBookIdForWords] = useState<string>('');
+  const [selectedWordBookIdForQuiz, setSelectedWordBookIdForQuiz] = useState<string>('');
 
   // ユーザーの認証状態に応じてページを切り替え
   useEffect(() => {
@@ -46,12 +47,13 @@ function App() {
   };
 
   // クイズ開始処理
-  const handleStartQuiz = async (mode: QuizMode, wordCount: number) => {
+  const handleStartQuiz = async (mode: QuizMode, wordCount: number, wordBookId: string) => {
     setIsLoadingWords(true);
     try {
       setQuizMode(mode);
       setWordCount(wordCount);
       setCurrentPage('quiz');
+      setSelectedWordBookIdForQuiz(wordBookId);
     } catch (error) {
       console.error('Error starting quiz:', error);
       alert('クイズの開始に失敗しました');
@@ -67,7 +69,7 @@ function App() {
 
   // 単語帳を開く
   const handleOpenWords = (wordBookId: string) => {
-    setSelectedWordBookId(wordBookId);
+    setSelectedWordBookIdForWords(wordBookId);
     setCurrentPage('words');
   };
 
@@ -116,7 +118,7 @@ function App() {
       );
     
     case 'quiz':
-      return <QuizPage userId={user?.uid || null} onBackToHome={handleBackToHome} mode={quizMode} wordCount={wordCount} />;
+      return <QuizPage userId={user?.uid || null} onBackToHome={handleBackToHome} mode={quizMode} wordCount={wordCount} wordBookId={selectedWordBookIdForQuiz}/>;
     
     case 'wordBooks':
       return user ? (
@@ -125,7 +127,7 @@ function App() {
 
     case 'words':
       return user ? (
-        <WordsPage wordBookId={selectedWordBookId} onBack={handleOpenWordBooks} />
+        <WordsPage wordBookId={selectedWordBookIdForWords} onBack={handleOpenWordBooks} />
       ) : null;
     
     default:
