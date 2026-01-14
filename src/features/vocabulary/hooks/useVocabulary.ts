@@ -23,7 +23,6 @@ export const useVocabulary = (wordBookId: string | null) => {
 
     try {
       const words = await wordBookService.getWordsInWordBook(wordBookId);
-      console.log("loaded words", words);
       setWords(words);
     } catch (err: any) {
       setError(err.message);
@@ -91,7 +90,6 @@ export const useVocabulary = (wordBookId: string | null) => {
       setLoading(false);
     }
   }, []);
-  console.log("words", words);
 
   return {
     words,

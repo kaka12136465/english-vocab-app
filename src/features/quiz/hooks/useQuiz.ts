@@ -1,8 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Word, QuizMode } from '@/types';
-import { QuizState, QuizAnswer } from '../types/quiz.types';
+import { QuizAnswer, QuizState } from '../types/quiz.types';
 import * as quizService from '../services/quizService';
-import * as progressService from '@/features/userProgress/services/progressService';
 
 /**
  * クイズ機能を管理するカスタムフック
@@ -42,14 +41,17 @@ export const useQuiz = (userId: string | null) => {
   
 
   /**
-   * 回答を提出
+   * 「回答する」ボタンを押すと呼ばれる
+   *  解答の正誤を確かめ、その結果をquizState.answerに追加する。
+   *  
    */
-  const submitAnswer = useCallback(async (userAnswer: string) => {
+  const submitAnswer = useCallback(async (userAnswer: string): Promise<boolean> => {
     const currentQuestion = quizState.questions[quizState.currentQuestionIndex];
-    if (!currentQuestion) return;
+    if (!currentQuestion) return false;
 
     const isCorrect = quizService.checkAnswer(userAnswer, currentQuestion.correctAnswers);
 
+    
     const answer: QuizAnswer = {
       questionIndex: quizState.currentQuestionIndex,
       userAnswer,
@@ -57,6 +59,11 @@ export const useQuiz = (userId: string | null) => {
       correctAnswers: currentQuestion.correctAnswers,
     };
 
+    setQuizState(prev => ({
+      ...prev,
+      answers: prev.answers.concat([answer])
+    }))
+    /*
     // 進捗を更新（ユーザーがログイン中の場合）
     if (userId) {
       try {
@@ -68,37 +75,28 @@ export const useQuiz = (userId: string | null) => {
       } catch (error) {
         console.error('Failed to update progress:', error);
       }
-    }
-
-    // 回答を記録
-    const newAnswers = [...quizState.answers, answer];
-    const isLastQuestion = quizState.currentQuestionIndex === quizState.questions.length - 1;
-
-    const newQuizState: QuizState = {
-      ...quizState,
-      answers: newAnswers,
-      currentQuestionIndex: isLastQuestion ? quizState.currentQuestionIndex : quizState.currentQuestionIndex + 1,
-      isComplete: isLastQuestion,
-    };
-
-    setQuizState(newQuizState);
-
-    console.log("submit", newQuizState);
-
-    return {newQuizState,isCorrect};
+    }*/
+    return isCorrect;
   }, [quizState, userId]);
 
   /**
-   * 次の問題へ進む
+   * 「次へ」ボタンを押すと呼ばれる。
+   *  もし最後の問題でなければ、quizStateのindexをインクリメントする。
+   *  最後の問題ならisCompleteをtrueにする。
    */
   const nextQuestion = useCallback(() => {
     if (quizState.currentQuestionIndex < quizState.questions.length - 1) {
       setQuizState(prev => ({
         ...prev,
-        currentQuestionIndex: prev.currentQuestionIndex + 1,
+        currentQuestionIndex: prev.currentQuestionIndex + 1
       }));
+    } else {
+      setQuizState(prev => ({
+        ...prev,
+        isComplete: true
+      }))
     }
-  }, [quizState.currentQuestionIndex, quizState.questions.length]);
+  }, [quizState]);
 
   /**
    * クイズをリセット
@@ -134,5 +132,6 @@ export const useQuiz = (userId: string | null) => {
     resetQuiz,
     playQuestionAudio,
     getQuizSummary,
+    setQuizState,
   };
 };

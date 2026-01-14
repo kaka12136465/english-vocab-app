@@ -39,7 +39,6 @@ export const HomePage: React.FC<HomePageProps> = ({ userName, onStartQuiz, onLog
   useEffect (() => {
     const fetchWordBooks = async () => {
       const wordBooks: WordBook[] = await getAllWordBooks();
-      console.log(wordBooks);
       setWordBooks(wordBooks);
     }
     fetchWordBooks();
@@ -54,7 +53,6 @@ export const HomePage: React.FC<HomePageProps> = ({ userName, onStartQuiz, onLog
       console.error("単語帳が存在しません");
       return;
     }
-    console.log("selectedWordBookId", wordBooks[selectedWordBookIndex].id);
     onStartQuiz(selectedMode, wordCount, wordBooks[selectedWordBookIndex].id);
   };
 
@@ -109,7 +107,7 @@ export const HomePage: React.FC<HomePageProps> = ({ userName, onStartQuiz, onLog
             {/* 単語帳選択 */}
             <select 
               value={selectedWordBookIndex} 
-              onChange={(e) => {setSelectedWordBookIndex(Number(e.target.value));console.log(wordBooks[Number(e.target.value)]);}}
+              onChange={(e) => {setSelectedWordBookIndex(Number(e.target.value));}}
               className="px-4 py-2 border rounded"
             >
               {wordBooks.map((item: WordBook, index) => (

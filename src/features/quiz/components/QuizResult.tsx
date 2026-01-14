@@ -107,6 +107,7 @@ export const QuizResult: React.FC<QuizResultProps> = ({
         <button
           onClick={onRestart}
           className="flex-1 py-3 px-4 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+          autoFocus
         >
           もう一度挑戦
         </button>

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { QuizCard } from '@/features/quiz/components/QuizCard';
 import { QuizResult } from '@/features/quiz/components/QuizResult';
 import { useQuiz } from '@/features/quiz/hooks/useQuiz';
 import { QuizMode } from '@/types';
-import { QuizState } from '@/features/quiz/types/quiz.types';
 import { getWordsInWordBook } from '@/features/vocabulary/services/wordBookService';
 
 interface QuizPageProps {
@@ -15,9 +14,8 @@ interface QuizPageProps {
 }
 
 export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, wordCount, wordBookId }) => {
-  // quizStateの変更が反映されていない
   const {
-    quizState: initialQuizState,
+    quizState,
     currentQuestion,
     submitAnswer,
     nextQuestion,
@@ -25,15 +23,13 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
     playQuestionAudio,
     getQuizSummary,
     startQuiz,
+    setQuizState,
   } = useQuiz(userId);
-  const [quizState, setQuizState] = useState<QuizState>(initialQuizState);
-  console.log("quizState",quizState.currentQuestionIndex, quizState);
 
   useEffect(() => {
     const start = async () => {
       try {
         if (!userId) return;
-        console.log("wordBook", wordBookId);
         const words = await getWordsInWordBook(wordBookId);
 
         // ランダムにシャッフル
@@ -70,7 +66,6 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
   // クイズ実施中の場合
   if (currentQuestion && quizState.config) {
     const isAudioMode = quizState.config.mode === 'audio-to-japanese';
-    console.log("currentQuizState", quizState);
     
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 py-12 px-4">
@@ -95,11 +90,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
           question={currentQuestion}
           questionNumber={quizState.currentQuestionIndex + 1}
           totalQuestions={quizState.questions.length}
-          onSubmit={async (answer) => {
-            const {newQuizState: newQuizState, isCorrect: isCorrect} = await submitAnswer(answer) ?? {newQuizState: quizState, isCorrect: false};
-            setQuizState(newQuizState);
-            return {newQuizState, isCorrect};
-          }}
+          onSubmit={submitAnswer}
           onNext={nextQuestion}
           isAudioMode={isAudioMode}
           onPlayAudio={isAudioMode ? playQuestionAudio : undefined}

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { QuizQuestionData, QuizState } from '../types/quiz.types';
+import { QuizQuestionData} from '../types/quiz.types';
 
 interface QuizCardProps {
   question: QuizQuestionData;
   questionNumber: number;
   totalQuestions: number;
-  onSubmit: (answer: string) => Promise<{newQuizState: QuizState, isCorrect: boolean}>;
+  onSubmit: (answer: string) => Promise<boolean>;
   onNext: () => void;
   isAudioMode: boolean;
   onPlayAudio?: () => void;
@@ -20,6 +20,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   isAudioMode,
   onPlayAudio,
 }) => {
+
   const [userAnswer, setUserAnswer] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -37,8 +38,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
 
     setLoading(true);
     try {
-      console.log("qNum", questionNumber);
-      const {isCorrect: correct} = await onSubmit(userAnswer);
+      const correct = await onSubmit(userAnswer);
       setIsCorrect(correct);
       setIsSubmitted(true);
     } catch (error) {
@@ -49,7 +49,8 @@ export const QuizCard: React.FC<QuizCardProps> = ({
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async (e: React.FormEvent) => {
+    e.preventDefault();
     onNext();
   };
 
@@ -127,7 +128,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
           </button>
         </form>
       ) : (
-        <div className="space-y-4">
+        <form className="space-y-4" onSubmit={handleNext}>
           {/* 結果表示 */}
           <div
             className={`p-4 rounded-lg ${
@@ -163,12 +164,14 @@ export const QuizCard: React.FC<QuizCardProps> = ({
 
           {/* 次へボタン */}
           <button
-            onClick={handleNext}
+            type="submit"
+            disabled={loading}
             className="w-full py-3 px-4 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+            autoFocus
           >
-            次の問題へ
+            {loading ? "ロード中..." : questionNumber < totalQuestions ? "次の問題へ" : "結果を表示する"}
           </button>
-        </div>
+        </form>
       )}
     </div>
   );
