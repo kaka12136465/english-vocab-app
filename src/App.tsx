@@ -7,6 +7,7 @@ import { useAuth } from './features/auth/hooks/useAuth';
 import { QuizMode} from './types';
 import { LoginFormData } from './features/auth/types/auth.types';
 import { WordBooksPage } from './components/BookshelfPage';
+import { Header } from './components/Header';
 
 type AppPage = 'auth' | 'home' | 'quiz' | 'wordBooks' | 'words';
 
@@ -105,29 +106,61 @@ function App() {
   // ページ表示
   switch (currentPage) {
     case 'auth':
-      return <AuthPage onLogin={handleLogin} onSignup={handleSignup} />;
+      return (
+        <div>
+          <AuthPage onLogin={handleLogin} onSignup={handleSignup} />
+        </div>
+      );
     
     case 'home':
       return (
-        <HomePage
-          userName={user?.email || ''}
-          onStartQuiz={handleStartQuiz}
-          onLogout={handleLogout}
-          onOpenWordBooks={handleOpenWordBooks}
-        />
+        <div>
+          <Header 
+            userName={user?.email || ''}
+            onLogout={handleLogout}
+            onOpenWordBooks={handleOpenWordBooks}
+            setCurrentPage={setCurrentPage}
+          />
+          <HomePage onStartQuiz={handleStartQuiz}/>
+        </div>
       );
     
     case 'quiz':
-      return <QuizPage userId={user?.uid || null} onBackToHome={handleBackToHome} mode={quizMode} wordCount={wordCount} wordBookId={selectedWordBookIdForQuiz}/>;
-    
+      return (
+        <div>
+          <Header 
+              userName={user?.email || ''}
+              onLogout={handleLogout}
+              onOpenWordBooks={handleOpenWordBooks}
+              setCurrentPage={setCurrentPage}
+            />
+          <QuizPage userId={user?.uid || null} onBackToHome={handleBackToHome} mode={quizMode} wordCount={wordCount} wordBookId={selectedWordBookIdForQuiz}/>;
+        </div>
+      );
     case 'wordBooks':
       return user ? (
-        <WordBooksPage userId={user.uid} onBack={handleBackToHome} onOpenWords={handleOpenWords} />
+        <div>
+          <Header 
+            userName={user?.email || ''}
+            onLogout={handleLogout}
+            onOpenWordBooks={handleOpenWordBooks}
+            setCurrentPage={setCurrentPage}
+          />
+          <WordBooksPage userId={user.uid} onBack={handleBackToHome} onOpenWords={handleOpenWords} />
+        </div>
       ) : null;
 
     case 'words':
       return user ? (
-        <WordsPage wordBookId={selectedWordBookIdForWords} onBack={handleOpenWordBooks} />
+        <div>
+          <Header 
+            userName={user?.email || ''}
+            onLogout={handleLogout}
+            onOpenWordBooks={handleOpenWordBooks}
+            setCurrentPage={setCurrentPage}
+          />
+          <WordsPage wordBookId={selectedWordBookIdForWords} onBack={handleOpenWordBooks} />
+        </div>
       ) : null;
     
     default:
