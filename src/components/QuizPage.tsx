@@ -24,6 +24,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
     getQuizSummary,
     startQuiz,
     setQuizState,
+    checkUserAnswer,
   } = useQuiz(userId);
 
   useEffect(() => {
@@ -94,6 +95,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
           onNext={nextQuestion}
           isAudioMode={isAudioMode}
           onPlayAudio={isAudioMode ? playQuestionAudio : undefined}
+          onCheckAnswer={checkUserAnswer}
         />
       </div>
     );

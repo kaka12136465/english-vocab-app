@@ -1,5 +1,6 @@
 import { Word, QuizMode } from '@/types';
 import { QuizQuestionData } from '../types/quiz.types';
+import { requestGemini } from '@/lib/geminiRequestService';
 
 /**
  * クイズの問題文を生成
@@ -46,6 +47,24 @@ export const checkAnswer = (
     return normalizedUserAnswer === normalizedCorrectAnswer;
   });
 };
+
+/**
+ * 和訳の正誤確認
+ * 英単語と日本単語が与えられ、その日本単語が英単語の和訳として正しいか判別する
+ */
+export const checkCorrectTranslation = async (english: string, japanese: string) => {
+  try{
+    const prompt = english + "の和訳として「" + japanese + "」は正しい？true,falseのみ出力";
+    console.log("プロンプト", prompt);
+
+    const response = await requestGemini(prompt);
+    console.log("レスポンス", response)
+    return response;
+  }catch(err){
+    console.error(err);
+    throw new Error("和訳のチェックに失敗しました。");
+  }
+}
 
 /**
  * 音声を再生（Web Speech API使用）

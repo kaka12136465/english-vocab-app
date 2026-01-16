@@ -9,6 +9,7 @@ interface QuizCardProps {
   onNext: () => void;
   isAudioMode: boolean;
   onPlayAudio?: () => void;
+  onCheckAnswer: () => Promise<boolean>;
 }
 
 export const QuizCard: React.FC<QuizCardProps> = ({
@@ -19,12 +20,14 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   onNext,
   isAudioMode,
   onPlayAudio,
+  onCheckAnswer,
 }) => {
 
   const [userAnswer, setUserAnswer] = useState('');
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isCheckButtonClicked, setIsCheckButtonClicked] = useState(false);
 
   // 問題が変わったらリセット
   useEffect(() => {
@@ -128,7 +131,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
           </button>
         </form>
       ) : (
-        <form className="space-y-4" onSubmit={handleNext}>
+        <form className="space-y-4" onSubmit={(e) => {handleNext(e); setIsCheckButtonClicked(false)}}>
           {/* 結果表示 */}
           <div
             className={`p-4 rounded-lg ${
@@ -137,21 +140,38 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                 : 'bg-red-100 border border-red-300'
             }`}
           >
-            <p
-              className={`text-lg font-bold mb-2 ${
+            <div
+              className={`text-lg font-bold mb-2 flex items-center gap-4 ${
                 isCorrect ? 'text-green-800' : 'text-red-800'
               }`}
             >
-              {isCorrect ? '正解！' : '不正解'}
+              <div>
+                {isCorrect ? '正解！' : '不正解'}
+              </div>
+              { !isCorrect && !isCheckButtonClicked &&
+                <button
+                  type="button"
+                  disabled={loading}
+                  onClick={async () => {
+                    setIsCorrect(await onCheckAnswer());
+                    setIsCheckButtonClicked(true);
+                  }}
+                  className="px-3 py-1 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 whitespace-nowrap"
+                >
+                  正解か確かめる
+                </button>
+              }
+            </div>
+            
+            <div className="flex items-center gap-3">
+              <div className="text-sm text-gray-700 mt-1">
+                あなたの回答: <span className="font-medium">{userAnswer}</span>
+              </div>
+            </div>
+            <p className="text-sm text-gray-700 mt-1">
+              正解: <span className="font-medium">{question.correctAnswers.join(', ')}</span>
             </p>
-            <p className="text-sm text-gray-700">
-              あなたの回答: <span className="font-medium">{userAnswer}</span>
-            </p>
-            {!isCorrect && (
-              <p className="text-sm text-gray-700 mt-1">
-                正解: <span className="font-medium">{question.correctAnswers.join(', ')}</span>
-              </p>
-            )}
+            
           </div>
 
           {/* 例文表示 */}

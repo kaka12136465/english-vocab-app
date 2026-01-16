@@ -3,6 +3,7 @@ import { Word, QuizMode } from '@/types';
 import { QuizAnswer, QuizState } from '../types/quiz.types';
 import * as quizService from '../services/quizService';
 import {getProgressStats, updateUserProgress } from '@/features/userProgress/services/progressService';
+import { checkCorrectTranslation } from '../services/quizService';
 
 /**
  * クイズ機能を管理するカスタムフック
@@ -128,6 +129,35 @@ export const useQuiz = (userId: string | null) => {
     return quizService.calculateQuizSummary(quizState.questions.length, correctCount);
   }, [quizState]);
 
+  /**
+   * 回答が不正解の場合に、本当に不正解かAIに判断させる
+   */
+  const checkUserAnswer = useCallback(async () => {
+    const latestAnswer = quizState.answers[quizState.answers.length - 1];
+    const question = quizState.questions[latestAnswer.questionIndex];
+    if(latestAnswer.isCorrect){
+      console.error("正解してる場合はAIチェックをできません。", latestAnswer);
+      return true;
+    }
+
+    // 回答が日本語化確認
+    const regex = /^[ぁ-んァ-ヶー一-龠々〆〤]+$/;
+    if(!regex.test(latestAnswer.userAnswer)){
+      console.error("回答は日本語のみである必要があります。");
+      return false;
+    }
+    const resultText = await checkCorrectTranslation(question.word.english, latestAnswer.userAnswer);
+    const isCorrect = resultText === "true" ? true : false;
+    console.log(isCorrect);
+    if(!isCorrect){
+      console.log("間違ってます");
+      return isCorrect;
+    }
+    
+    latestAnswer.isCorrect = true;
+    return isCorrect;
+  }, [quizState.answers])
+
   return {
     quizState,
     currentQuestion: quizState.questions[quizState.currentQuestionIndex],
@@ -138,5 +168,6 @@ export const useQuiz = (userId: string | null) => {
     playQuestionAudio,
     getQuizSummary,
     setQuizState,
+    checkUserAnswer,
   };
 };

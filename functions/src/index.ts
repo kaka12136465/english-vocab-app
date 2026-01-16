@@ -2,8 +2,7 @@ import {onRequest} from "firebase-functions/v2/https";
 import {GoogleGenAI} from "@google/genai";
 import * as logger from "firebase-functions/logger";
 
-// 環境変数からAPIキーを取得
-// Geminiテスト用の関数
+// function/.envのGEMINI_API_KEY="APIKEY"からAPIキーを取得
 export const useGemini = onRequest(async (req, res) => {
   try {
     // 本番環境では削除
