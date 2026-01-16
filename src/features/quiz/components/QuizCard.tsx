@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { QuizQuestionData} from '../types/quiz.types';
+import { Word } from '@/types';
 
 interface QuizCardProps {
   question: QuizQuestionData;
@@ -10,6 +11,7 @@ interface QuizCardProps {
   isAudioMode: boolean;
   onPlayAudio?: () => void;
   onCheckAnswer: () => Promise<boolean>;
+  onAddJpToEnWord: (word: Word, japanese:string) => Promise<void>;
 }
 
 export const QuizCard: React.FC<QuizCardProps> = ({
@@ -21,6 +23,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   isAudioMode,
   onPlayAudio,
   onCheckAnswer,
+  onAddJpToEnWord,
 }) => {
 
   const [userAnswer, setUserAnswer] = useState('');
@@ -28,6 +31,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [isCheckButtonClicked, setIsCheckButtonClicked] = useState(false);
+  const [isAddJpButtonClicked, setIsAddJpButtonClicked] = useState(false);
 
   // 問題が変わったらリセット
   useEffect(() => {
@@ -70,9 +74,19 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   };
 
   const handleAiCheck = async () => {
+    setLoading(true);
     if(isCorrect || isCheckButtonClicked) return;
-    setIsCorrect(await onCheckAnswer());
+    const correct = await onCheckAnswer();
+    setIsCorrect(correct);
     setIsCheckButtonClicked(true);
+    setLoading(false);
+  }
+
+  const handleAddJp = async () => {
+    setLoading(true);
+    await onAddJpToEnWord(question.word, userAnswer);
+    setLoading(false);
+    setIsAddJpButtonClicked(true);
   }
 
   return (
@@ -171,10 +185,36 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                   type="button"
                   disabled={loading}
                   onClick={handleAiCheck}
-                  className="px-3 py-1 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 whitespace-nowrap"
+                  className={`${
+                    loading
+                      ? "text-sm text-gray-700 mt-1" 
+                      : "px-3 py-1 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 whitespace-nowrap"
+                    }`}
                 >
-                  正解か確かめる AI
+                  {loading ? "判定中..." : "AIチェック"}
                 </button>
+              }
+              { !isCorrect && isCheckButtonClicked &&
+                <p className="text-sm text-gray-700 mt-1">結果は変わりませんでした</p>
+              }
+              {
+                isCorrect && isCheckButtonClicked && !isAddJpButtonClicked &&
+                <button
+                  type='button'
+                  disabled={loading}
+                  onClick={handleAddJp}
+                  className={`${
+                    loading
+                      ? "text-sm text-gray-700 mt-1" 
+                      : "px-3 py-1 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 whitespace-nowrap"
+                    }`}
+                  >
+                  {loading ? "追加中..." : "和訳を追加"}
+                </button>
+              }
+              {
+                isCorrect && isCheckButtonClicked && isAddJpButtonClicked &&
+                <p className="text-sm text-gray-700 mt-1">追加完了</p>
               }
             </div>
             

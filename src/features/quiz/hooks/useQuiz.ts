@@ -4,6 +4,7 @@ import { QuizAnswer, QuizState } from '../types/quiz.types';
 import * as quizService from '../services/quizService';
 import {getProgressStats, updateUserProgress } from '@/features/userProgress/services/progressService';
 import { checkCorrectTranslation } from '../services/quizService';
+import { updateWord } from '@/features/vocabulary/services/wordBookService';
 
 /**
  * クイズ機能を管理するカスタムフック
@@ -157,8 +158,13 @@ export const useQuiz = (userId: string | null) => {
     latestAnswer.isCorrect = true;
     setQuizState(prev => ({
       ...prev,
-    }))
+    }));
+
     return isCorrect;
+  }, [quizState.answers])
+
+  const addJpToEnWord = useCallback(async (word:Word, japanese:string) => {
+    await updateWord(word.id, {...word, japanese:word.japanese.concat([japanese])});
   }, [quizState.answers])
 
   return {
@@ -172,5 +178,6 @@ export const useQuiz = (userId: string | null) => {
     getQuizSummary,
     setQuizState,
     checkUserAnswer,
+    addJpToEnWord,
   };
 };
