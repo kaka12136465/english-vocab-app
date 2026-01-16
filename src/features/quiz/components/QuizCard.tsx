@@ -36,6 +36,18 @@ export const QuizCard: React.FC<QuizCardProps> = ({
     setIsCorrect(null);
   }, [question]);
 
+  useEffect(() => {
+    if(isCorrect || isCheckButtonClicked) return;
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.ctrlKey && event.key === "Enter") {
+        event.preventDefault();
+        handleAiCheck();
+      }
+    }
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [isSubmitted, isCheckButtonClicked])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -56,6 +68,12 @@ export const QuizCard: React.FC<QuizCardProps> = ({
     e.preventDefault();
     onNext();
   };
+
+  const handleAiCheck = async () => {
+    if(isCorrect || isCheckButtonClicked) return;
+    setIsCorrect(await onCheckAnswer());
+    setIsCheckButtonClicked(true);
+  }
 
   return (
     <div className="w-full max-w-2xl mx-auto p-6 bg-white rounded-lg shadow-md">
@@ -152,13 +170,10 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                 <button
                   type="button"
                   disabled={loading}
-                  onClick={async () => {
-                    setIsCorrect(await onCheckAnswer());
-                    setIsCheckButtonClicked(true);
-                  }}
+                  onClick={handleAiCheck}
                   className="px-3 py-1 text-xs bg-primary-600 text-white rounded hover:bg-primary-700 whitespace-nowrap"
                 >
-                  正解か確かめる
+                  正解か確かめる AI
                 </button>
               }
             </div>

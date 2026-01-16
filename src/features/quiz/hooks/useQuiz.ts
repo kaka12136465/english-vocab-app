@@ -155,6 +155,9 @@ export const useQuiz = (userId: string | null) => {
     }
     
     latestAnswer.isCorrect = true;
+    setQuizState(prev => ({
+      ...prev,
+    }))
     return isCorrect;
   }, [quizState.answers])
 

@@ -92,11 +92,9 @@ export const QuizResult: React.FC<QuizResultProps> = ({
               <p className="text-sm text-gray-700 mb-1">
                 あなたの回答: <span className="font-medium">{answer.userAnswer}</span>
               </p>
-              {!answer.isCorrect && (
-                <p className="text-sm text-gray-700">
-                  正解: <span className="font-medium">{answer.correctAnswers.join(', ')}</span>
-                </p>
-              )}
+              <p className="text-sm text-gray-700">
+                正解: <span className="font-medium">{answer.correctAnswers.join(', ')}</span>
+              </p>
             </div>
           ))}
         </div>
