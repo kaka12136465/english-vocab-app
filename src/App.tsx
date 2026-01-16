@@ -6,7 +6,7 @@ import { WordsPage } from './components/WordsPage';
 import { useAuth } from './features/auth/hooks/useAuth';
 import { QuizMode} from './types';
 import { LoginFormData } from './features/auth/types/auth.types';
-import { WordBooksPage } from './components/WordBooksPage';
+import { WordBooksPage } from './components/BookshelfPage';
 
 type AppPage = 'auth' | 'home' | 'quiz' | 'wordBooks' | 'words';
 

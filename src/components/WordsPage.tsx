@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AddWordForm } from '@/features/vocabulary/components/AddWordForm';
-import { useVocabulary } from '@/features/vocabulary/hooks/useVocabulary';
+import { useVocabulary } from '@/features/vocabulary/hooks/useWordBook';
 import { AddWordFormData} from '@/features/vocabulary/types/vocabulary.types';
 import { WordCard } from '@/features/vocabulary/components/WordCard';
 import { deleteWord } from '@/features/vocabulary/services/vocabularyService';

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AddWordBookForm } from '@/features/vocabulary/components/AddWordBookForm';
-import { useWordBook } from '@/features/vocabulary/hooks/useWordBook';
+import { useWordBook } from '@/features/vocabulary/hooks/useBookshelf';
 import { WordBookCard } from '@/features/vocabulary/components/WordBookCard';
 
 interface WordBooksPageProps {

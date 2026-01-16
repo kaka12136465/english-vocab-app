@@ -24,7 +24,7 @@ export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord}) => {
           <button 
             onClick={async () => {await onDeleteWord(word.id)}}
             className="text-primary-600 hover:text-primary-700 text-sm font-medium color-red"
-            >
+          >
             削除
           </button> 
 

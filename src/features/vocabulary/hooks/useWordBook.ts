@@ -1,29 +1,102 @@
-import { WordBook } from "@/types";
-import { useState } from "react";
-import { getAllWordBooks } from "../services/vocabularyService";
+import { useState, useCallback } from 'react';
+import { Word } from '@/types';
+import { AddWordFormData } from '../types/vocabulary.types';
+import * as vocabularyService from '../services/vocabularyService';
+import * as wordBookService from '../services/wordBookService';
 
-export const useWordBook = () => {
-    const [wordBooks, setWordBooks] = useState<WordBook[]>([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
+/**
+ * 単語管理を行うカスタムフック
+ */
+export const useVocabulary = (wordBookId: string | null) => {
+  const [words, setWords] = useState<Word[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-    async function loadAllWordBooks(): Promise<void>{
-        setLoading(true);
-        setError(null);
-        try {
-            const fetchedWordBooks: WordBook[] = await getAllWordBooks();
-            setWordBooks(fetchedWordBooks);
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+  /**
+   * 指定の単語帳にある単語をwordsへ読み込み
+   */
+  const loadWordsInWordBook = useCallback(async () => {
+    if (!wordBookId) return;
 
-    return {
-        wordBooks,
-        loading,
-        error,
-        loadAllWordBooks,
-    };
-}
+    setLoading(true);
+    setError(null);
+
+    try {
+      const words = await wordBookService.getWordsInWordBook(wordBookId);
+      setWords(words);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }, [wordBookId]);
+
+  /**
+   * 単語帳に新しい単語を追加
+   */
+  const addWord = useCallback(async (
+    formData: AddWordFormData
+  ): Promise<boolean> => {
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // 重複チェック
+      const isDuplicate = await wordBookService.checkDuplicateWordInWordBook(
+        wordBookId!,
+        formData.english
+      );
+
+      if (isDuplicate) {
+        setError('この単語は既に登録されています');
+        return false;
+      }
+
+      // 単語を追加
+      await wordBookService.addWordToWordBook({
+        ...formData,
+        wordBookId: wordBookId!,
+        createdAt: new Date(),
+        audioUrl: '',
+      });
+
+      // 単語リストを再読み込み
+      await loadWordsInWordBook();
+
+      return true;
+    } catch (err: any) {
+      setError(err.message);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [wordBookId, loadWordsInWordBook]);
+
+  /**
+   * 単語帳内の単語を検索
+   */
+  const searchWords = useCallback(async (searchTerm: string): Promise<Word[]> => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const results = await vocabularyService.searchWords(searchTerm);
+      return results;
+    } catch (err: any) {
+      setError(err.message);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  return {
+    words,
+    loading,
+    error,
+    loadWordsInWordBook,
+    addWord,
+    searchWords,
+  };
+};
