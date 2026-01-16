@@ -13,7 +13,7 @@ export const useVocabulary = (wordBookId: string | null) => {
   const [error, setError] = useState<string | null>(null);
 
   /**
-   * 指定の単語帳にある単語を読み込み
+   * 指定の単語帳にある単語をwordsへ読み込み
    */
   const loadWordsInWordBook = useCallback(async () => {
     if (!wordBookId) return;
@@ -32,7 +32,7 @@ export const useVocabulary = (wordBookId: string | null) => {
   }, [wordBookId]);
 
   /**
-   * 新しい単語を追加
+   * 単語帳に新しい単語を追加
    */
   const addWord = useCallback(async (
     formData: AddWordFormData
@@ -74,7 +74,7 @@ export const useVocabulary = (wordBookId: string | null) => {
   }, [wordBookId, loadWordsInWordBook]);
 
   /**
-   * 単語を検索
+   * 単語帳内の単語を検索
    */
   const searchWords = useCallback(async (searchTerm: string): Promise<Word[]> => {
     setLoading(true);

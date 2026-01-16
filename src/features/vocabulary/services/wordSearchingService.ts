@@ -11,7 +11,7 @@ interface ScrapingWordData {
 
 interface DictionaryAPIResponse {
   word: string;
-  phonetic?: string;
+  phonetics: any[];
   meanings: Array<{
     definitions: Array<{
       definition: string;
@@ -24,10 +24,12 @@ interface DictionaryAPIResponse {
   }>;
 }
 
-export async function scrapeWeblio(word: string): Promise<ScrapingWordData> {
+export async function scrapeWord(word: string): Promise<ScrapingWordData> {
   const response = await fetch(
     `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`
   );
+  
+  console.log("fetch from", `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`)
 
   if (!response.ok) {
     if (response.status === 404){
@@ -47,11 +49,17 @@ export async function scrapeWeblio(word: string): Promise<ScrapingWordData> {
   const data: DictionaryAPIResponse[] = await response.json();
   const entry = data[0];
 
+  let pronunciation: string = "";
   const allSynonyms = new Set<string>();
   const allAntonyms = new Set<string>();
   const meanings: Set<string> = new Set<string>();
   const examples: string[] = [];
   const isFound: boolean = true;
+
+  console.log("発音", entry.phonetics)
+  entry.phonetics.forEach((phonetic) => {
+    if(phonetic.text) pronunciation = phonetic.text;
+  });
 
   entry.meanings.forEach((meaning) => {
     meaning.definitions.forEach((def) => {
@@ -70,7 +78,37 @@ export async function scrapeWeblio(word: string): Promise<ScrapingWordData> {
     synonyms: allSynonyms,
     antonyms: allAntonyms,
     exampleSentence: examples[0] || "",
-    pronunciation: entry.phonetic || "",
+    pronunciation: pronunciation,
     isFound,
   };
+}
+
+export const translateEnToJp = async (enWord: string): Promise<string> => {
+  try{
+    const response = await fetch(
+      "https://us-central1-englishwordlearning-d636b.cloudfunctions.net/useGemini",
+      {
+        method: "POST",
+        body: enWord + "のすべての和訳のみをカンマ区切りで3つ",
+      }
+    );
+    if(!response.ok){
+      console.error("https://us-central1-englishwordlearning-d636b.cloudfunctions.net/useGeminiレスポンスが正常に受け取れませんでした。");
+      console.error(response);
+      throw new Error("HTTPSリクエストの失敗");
+    }
+
+    const jsonData = await response.json();
+    if(!jsonData.success){
+      console.error("AIからのレスポンスが正常に受け取れませんでした。");
+      console.error(jsonData);
+      throw new Error("AIへのリクエスト失敗");
+    }
+
+    const resultText = jsonData.geminiResponse.candidates[0].content.parts[0].text;
+    return resultText;
+  }catch(err){
+    console.error(err);
+    throw new Error(enWord + "の日本語への翻訳に失敗しました");
+  }
 }

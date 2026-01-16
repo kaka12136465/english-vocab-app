@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AddWordFormData } from '../types/vocabulary.types';
-import { scrapeWeblio } from '../services/wordScrapingService';
+import { scrapeWord, translateEnToJp } from '../services/wordSearchingService';
 
 interface AddWordFormProps {
   onSubmit: (formData: AddWordFormData) => Promise<boolean>;
@@ -100,27 +100,32 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
     }
   };
 
-  const handleScraping = async () => {
+  // formData.englishの類義語、対義語、例文をスクレイピングし、
+  const handleSearch = async () => {
     if(formData.english.length === 0){
       setError("英単語は必須です");
       return;
     }
-    const word = await scrapeWeblio(formData.english);
+    console.log("searching", formData.english);
+    const word = await scrapeWord(formData.english);
+    console.log("scraping result", word);
+    const translateResponse:string = await translateEnToJp(formData.english);
+    console.log("translate result", translateResponse);
+
     if(!word.isFound){
       setError("英単語が見つかりません");
       return;
     }
     const newFormData: AddWordFormData = {
       english: word.english,
-      japanese: [],
+      japanese: translateResponse.split(/[,、\n]/),
       antonyms: Array.from(word.antonyms),
       synonyms: Array.from(word.synonyms),
       exampleSentence: word.exampleSentence,
       pronunciation: word.pronunciation,
     }
     setFormData(newFormData);
-    console.log("scraping", word);
-    console.log("formData", formData);
+    console.log("search result", newFormData);
   }
 
   return (
@@ -152,7 +157,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
         {/* スクレイピングボタン */}
         <button 
           type='button' 
-          onClick={handleScraping}
+          onClick={handleSearch}
           className='flex-1 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
         >
           検索

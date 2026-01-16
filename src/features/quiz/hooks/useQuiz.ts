@@ -2,6 +2,7 @@ import { useState, useCallback } from 'react';
 import { Word, QuizMode } from '@/types';
 import { QuizAnswer, QuizState } from '../types/quiz.types';
 import * as quizService from '../services/quizService';
+import {getProgressStats, updateUserProgress } from '@/features/userProgress/services/progressService';
 
 /**
  * クイズ機能を管理するカスタムフック
@@ -64,18 +65,7 @@ export const useQuiz = (userId: string | null) => {
       answers: prev.answers.concat([answer])
     }))
     /*
-    // 進捗を更新（ユーザーがログイン中の場合）
-    if (userId) {
-      try {
-        await progressService.updateUserProgress(
-          userId,
-          currentQuestion.word.id,
-          isCorrect
-        );
-      } catch (error) {
-        console.error('Failed to update progress:', error);
-      }
-    }*/
+    */
     return isCorrect;
   }, [quizState, userId]);
 
@@ -84,7 +74,7 @@ export const useQuiz = (userId: string | null) => {
    *  もし最後の問題でなければ、quizStateのindexをインクリメントする。
    *  最後の問題ならisCompleteをtrueにする。
    */
-  const nextQuestion = useCallback(() => {
+  const nextQuestion = useCallback(async () => {
     if (quizState.currentQuestionIndex < quizState.questions.length - 1) {
       setQuizState(prev => ({
         ...prev,
@@ -95,6 +85,21 @@ export const useQuiz = (userId: string | null) => {
         ...prev,
         isComplete: true
       }))
+      // 進捗を更新（ユーザーがログイン中の場合）
+      if (userId) {
+        quizState.answers.forEach(async answer => {
+          try {
+            await updateUserProgress(
+              userId,
+              quizState.questions[answer.questionIndex].word.id,
+              answer.isCorrect
+            );
+          } catch (error) {
+            console.error('Failed to update progress:', error);
+          }
+        });
+      }
+      console.log(userId ? await getProgressStats(userId) : "ユーザーなし");
     }
   }, [quizState]);
 
