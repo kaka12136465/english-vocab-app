@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { Word } from '@/types';
-import { AddWordFormData } from '../types/vocabulary.types';
+import { AddWordFormData, EditWordFormData } from '../types/vocabulary.types';
 import * as vocabularyService from '../services/vocabularyService';
 import * as wordBookService from '../services/wordBookService';
 
@@ -91,6 +91,24 @@ export const useVocabulary = (wordBookId: string | null) => {
     }
   }, []);
 
+  /**
+   * 単語データを更新する
+   */
+  const updateWordInWordBook = useCallback(async (oldWordId:string, newWord:EditWordFormData) => {
+    // 単語データがなければエラーを返す
+    try{
+      if(!words.find(word => word.id === oldWordId)){
+        console.error("単語が存在しません");
+        throw new Error("単語が存在しません");
+      }
+      await wordBookService.updateWord(oldWordId, newWord);
+      return true;
+    }catch(err){
+      console.error(err);
+      throw new Error("単語の更新に失敗しました");
+    }
+  }, [words]);
+
   return {
     words,
     loading,
@@ -98,5 +116,6 @@ export const useVocabulary = (wordBookId: string | null) => {
     loadWordsInWordBook,
     addWord,
     searchWords,
+    updateWordInWordBook,
   };
 };

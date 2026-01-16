@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { AddWordFormData } from '../types/vocabulary.types';
+import { AddWordFormData, EditWordFormData } from '../types/vocabulary.types';
 import { scrapeWord, translateEnToJp } from '../services/wordSearchingService';
+import { Word } from '@/types';
 
-interface AddWordFormProps {
-  onSubmit: (formData: AddWordFormData) => Promise<boolean>;
+interface EditWordFormProps {
+  onSubmit: (newWord: EditWordFormData) => Promise<boolean>;
   onCancel: () => void;
+  edittingWord: Word;
 }
 
-export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState<AddWordFormData>({
-    english: '',
-    japanese: [''],
-    synonyms: [],
-    antonyms: [],
-    exampleSentence: '',
-    pronunciation: '',
+export const EditWordForm: React.FC<EditWordFormProps> = ({ onSubmit, onCancel, edittingWord }) => {
+  const [formData, setFormData] = useState<EditWordFormData>({
+    english: edittingWord.english,
+    japanese: edittingWord.japanese,
+    synonyms: edittingWord.synonyms,
+    antonyms: edittingWord.antonyms,
+    exampleSentence: edittingWord.exampleSentence,
+    pronunciation: edittingWord.pronunciation,
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -130,28 +132,28 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
 
   return (
     <form onSubmit={(e) => {e.preventDefault();handleSubmit()}} className="bg-white rounded-lg shadow-md p-6">
-      <div className="flex justify-between items-start mb-2">
-        <span>
-            <h2 className="w-full flex text-2xl font-bold text-gray-800 mb-6">単語を追加</h2>
-        </span>
-        <div className="flex flex-col gap-2">
-            <button
-                type="submit"
-                disabled={loading}
-                className="flex-1 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-                {loading ? '追加中...' : '追加 (Ctrl + ; )'}
-            </button>
-            <button
-                type="button"
-                onClick={onCancel}
-                className="flex-1 py-2 px-4 bg-gray-200 text-gray-700 font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
-            >
-                キャンセル
-            </button>
+        <div className="flex justify-between items-start mb-2">
+            <span>
+                <h2 className="w-full flex text-2xl font-bold text-gray-800 mb-6">単語を編集</h2>
+            </span>
+            <div className="flex flex-col gap-2">
+                <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                    {loading ? '編集中...' : '編集 (Ctrl + ; )'}
+                </button>
+                <button
+                    type="button"
+                    onClick={onCancel}
+                    className="flex-1 py-2 px-4 bg-gray-200 text-gray-700 font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
+                >
+                    キャンセル
+                </button>
+            </div>
         </div>
-      </div>
-
+      
       <div className="space-y-6">
         {error && (
           <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md">
@@ -309,7 +311,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
             disabled={loading}
             className="flex-1 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? '追加中...' : '追加 (Ctrl + ; )'}
+            {loading ? '編集中...' : '編集 (Ctrl + ; )'}
           </button>
           <button
             type="button"

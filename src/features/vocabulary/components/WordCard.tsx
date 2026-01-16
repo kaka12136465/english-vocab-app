@@ -4,10 +4,13 @@ import { Timestamp } from "firebase/firestore";
 // 単語カードコンポーネント
 interface WordCardProps {
   word: Word;
-  onDeleteWord: (wordId: string) => Promise<string>
+  onDeleteWord: (wordId: string) => Promise<string>;
+  setShowAddForm: (isShow: boolean) => void;
+  setShowEditForm: (isShow: boolean) => void;
+  setEdittingWord: (edittingWord: Word | null) => void;
 }
 
-export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord}) => {
+export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord, setShowAddForm, setShowEditForm, setEdittingWord}) => {
   const [showDetails, setShowDetails] = useState(false);
 
   return (
@@ -22,7 +25,7 @@ export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord}) => {
         
         <div className="flex flex-col gap-2">
           <button 
-            onClick={async () => {await onDeleteWord(word.id)}}
+            onClick={async () => {await onDeleteWord(word.id); setEdittingWord(null); setShowEditForm(false);}}
             className="text-primary-600 hover:text-primary-700 text-sm font-medium color-red"
           >
             削除
@@ -33,6 +36,13 @@ export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord}) => {
             className="text-primary-600 hover:text-primary-700 text-sm font-medium"
           >
             {showDetails ? '閉じる' : '詳細'}
+          </button>
+
+          <button
+            onClick={() => {setEdittingWord(word);setShowEditForm(true);setShowAddForm(false);}}
+            className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+          >
+            編集
           </button>
         </div>
       </div>

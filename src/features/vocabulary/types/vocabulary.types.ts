@@ -17,6 +17,10 @@ export interface UserWord extends Word {
   createdAt: Date;
 }
 
+export interface EditWordFormData extends AddWordFormData{
+  
+}
+
 // 単語の検証結果
 export interface WordValidationResult {
   isValid: boolean;

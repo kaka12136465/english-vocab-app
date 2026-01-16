@@ -1,14 +1,13 @@
 import { db } from "@/lib/firebase";
 import { Word } from "@/types";
-import { addDoc, collection, getDocs } from "firebase/firestore";
+import { addDoc, collection, doc, getDocs, setDoc } from "firebase/firestore";
+import { EditWordFormData } from "../types/vocabulary.types";
 
 const WORDS_COLLECTION = "words";
 
 
 /**
- * 指定の単語帳にある単語を取得
- * @param wordBookId 
- * @returns 
+ * 指定の単語帳にある単語をすべて取得
  */
 export const getWordsInWordBook = async (wordBookId: string): Promise<Word[]> => {
   try {
@@ -57,3 +56,15 @@ export const checkDuplicateWordInWordBook = async (
     throw new Error("単語の重複チェックに失敗しました");
   }
 };
+
+// IDで指定した単語データをアップデートする
+export const updateWord = async (wordId: string, newWord: EditWordFormData) => {
+  try{
+    const docRef = doc(db, WORDS_COLLECTION, wordId);
+    await setDoc(docRef, newWord, {merge: true});
+    console.log("単語データを更新しました", {...newWord, wordId});
+  }catch(err){
+    console.error(err);
+    throw new Error("単語データの更新に失敗しました");
+  }
+}

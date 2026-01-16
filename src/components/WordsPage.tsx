@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { AddWordForm } from '@/features/vocabulary/components/AddWordForm';
 import { useVocabulary } from '@/features/vocabulary/hooks/useWordBook';
-import { AddWordFormData} from '@/features/vocabulary/types/vocabulary.types';
+import { AddWordFormData, EditWordFormData} from '@/features/vocabulary/types/vocabulary.types';
 import { WordCard } from '@/features/vocabulary/components/WordCard';
 import { deleteWord } from '@/features/vocabulary/services/vocabularyService';
+import { EditWordForm } from '@/features/vocabulary/components/EditWordForm';
+import { Word } from '@/types';
 
 interface WordsPageProps {
   wordBookId: string;
@@ -11,8 +13,10 @@ interface WordsPageProps {
 }
 
 export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
-  const { words, loading, error, loadWordsInWordBook, addWord } = useVocabulary(wordBookId);
+  const { words, loading, error, loadWordsInWordBook, addWord, updateWordInWordBook } = useVocabulary(wordBookId);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showEditForm, setShowEditForm] = useState(false);
+  const [edittingWord, setEdittingWord] = useState<Word | null>(null);
 
   useEffect(() => {
     loadWordsInWordBook();
@@ -31,6 +35,15 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
     const success = await deleteWord(wordId);
     loadWordsInWordBook();
     return success
+  }
+
+  const handleEditWord = async (newWord: EditWordFormData): Promise<boolean> => {
+    if(!edittingWord) return false;
+    const success = await updateWordInWordBook(edittingWord.id, newWord);
+    setEdittingWord(null);
+    setShowEditForm(false);
+    loadWordsInWordBook();
+    return success;
   }
 
   return (
@@ -66,10 +79,10 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
         )}
 
         {/* 追加ボタン */}
-        {!showAddForm && (
+        {!showAddForm && !showEditForm && (
           <div className="mb-6">
             <button
-              onClick={() => setShowAddForm(true)}
+              onClick={() => {setShowAddForm(true); setShowEditForm(false);}}
               className="w-full sm:w-auto px-6 py-3 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors flex items-center justify-center gap-2"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -85,11 +98,20 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
         )}
 
         {/* 追加フォーム */}
-        {showAddForm && (
+        {showAddForm && !showEditForm && (
           <div className="mb-6">
             <AddWordForm
               onSubmit={handleAddWord}
               onCancel={() => setShowAddForm(false)}
+            />
+          </div>
+        )}
+        {!showAddForm && showEditForm && edittingWord && (
+          <div className="mb-6">
+            <EditWordForm
+              onSubmit={handleEditWord}
+              onCancel={() => {setShowEditForm(false); setEdittingWord(null)}}
+              edittingWord={edittingWord}
             />
           </div>
         )}
@@ -133,7 +155,14 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {words.map((word) => (
-                <WordCard key={word.id} word={word} onDeleteWord={handleDeleteWord}/>
+                <WordCard 
+                  key={word.id}
+                  word={word}
+                  onDeleteWord={handleDeleteWord}
+                  setShowAddForm={setShowAddForm}
+                  setEdittingWord={setEdittingWord}
+                  setShowEditForm={setShowEditForm}
+                />
               ))}
             </div>
           </div>

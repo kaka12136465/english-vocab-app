@@ -18,7 +18,7 @@ const USER_WORDS_COLLECTION = 'userWords';
 const WORD_BOOKS_COLLECTION = 'wordBooks';
 
 /**
- * 単語IDから単語データを取得
+ * データベースにある単語IDから単語データを取得
  */
 export const getWordById = async (wordId: string): Promise<Word | null> => {
   try {
@@ -36,7 +36,7 @@ export const getWordById = async (wordId: string): Promise<Word | null> => {
 };
 
 /**
- * 全ての単語を取得
+ * データベース内の全ての単語を取得
  */
 export const getAllWords = async (): Promise<Word[]> => {
   try {
@@ -52,7 +52,7 @@ export const getAllWords = async (): Promise<Word[]> => {
 };
 
 /**
- * ランダムに指定数の単語を取得
+ * データベースからランダムに指定数の単語を取得
  */
 export const getRandomWords = async (count: number): Promise<Word[]> => {
   try {
@@ -73,7 +73,7 @@ export const getRandomWords = async (count: number): Promise<Word[]> => {
 };
 
 /**
- * 指定されたIDリストの単語リストを取得
+ * 指定されたIDリストに対応する単語をデータベースから取得し、単語リストを返す
  */
 export const getWordsByIds = async (wordIds: string[]): Promise<Word[]> => {
   try {
@@ -94,7 +94,7 @@ export const getWordsByIds = async (wordIds: string[]): Promise<Word[]> => {
 };
 
 /**
- * 単語検索（英語または日本語）
+ * データベースから単語検索（英語または日本語）
  */
 export const searchWords = async (searchTerm: string): Promise<Word[]> => {
   try {
@@ -182,7 +182,7 @@ export const addWordBook = async (
 };
 
 /**
- * 指定したIDの単語を削除
+ * 指定したIDの単語をデータベースから削除
  */
 export const deleteWord = async (wordId: string) => {
   try{
@@ -194,6 +194,7 @@ export const deleteWord = async (wordId: string) => {
     throw new Error(error.message || "単語の削除に失敗しました")
   }
 }
+
 
 
 
