@@ -13,7 +13,7 @@ interface WordsPageProps {
 }
 
 export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
-  const { words, loading, error, loadWordsInWordBook, addWord, updateWordInWordBook } = useVocabulary(wordBookId);
+  const { words, error, loadWordsInWordBook, addWord, updateWordInWordBook } = useVocabulary(wordBookId);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [edittingWord, setEdittingWord] = useState<Word | null>(null);
@@ -118,15 +118,8 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
         )}
 
         {/* ローディング */}
-        {loading && (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4"></div>
-            <p className="text-gray-600">読み込み中...</p>
-          </div>
-        )}
-
         {/* 単語リスト */}
-        {!loading && words.length === 0 && !showAddForm && (
+        {words.length === 0 && !showAddForm && (
           <div className="text-center py-12 bg-white rounded-lg shadow">
             <svg
               className="mx-auto h-12 w-12 text-gray-400 mb-4"
@@ -146,7 +139,7 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
           </div>
         )}
 
-        {!loading && words.length > 0 && (
+        {words.length > 0 && (
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-800">
