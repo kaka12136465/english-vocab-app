@@ -23,10 +23,12 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
   const [error, setError] = useState<string>('');
   const [isSearchLoading, setIsSearchLoading] = useState(false);
   const [isSearched, setIsSearched] = useState(false);
+  const [wordsFile, setWordsFile] = useState<File | null>(null);
 
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const addButtonRef = useRef<HTMLButtonElement>(null);
 
+  // ショートカットキー追加
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.key === ";") {
@@ -149,6 +151,65 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
     setIsSearched(true);
   }
 
+  // ファイルの内容を読み込み、ファイルに書いてる単語をすべてデータベースへ追加する
+  const handleAddWordsInFile = async () => {
+    setLoading(true);
+    try{
+      if (wordsFile) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+          const input = e.target?.result as string;
+          console.log("ファイルを読み込みました" + input);
+          const wordsData = JSON.parse(input);
+          const addingWords: string[] = wordsData.words;
+          console.log(wordsData);
+          console.log(addingWords);
+
+          let index = wordsNum + 1;
+          for(const word of addingWords){
+            console.log("searching", word);
+            const scrapedData = await scrapeWord(word);
+            console.log("scraping result", word);
+            if(!scrapedData.isFound){
+              setError("英単語が見つかりません");
+              setIsSearchLoading(false);
+              return;
+            }
+
+            const translateResponse:string = await translateEnToJp(word);
+            console.log("translate result", translateResponse);
+
+            
+            const newFormData: AddWordFormData = {
+              english: word,
+              japanese: translateResponse.split(/[,、\n]/),
+              antonyms: Array.from(scrapedData.antonyms),
+              synonyms: Array.from(scrapedData.synonyms),
+              exampleSentence: scrapedData.exampleSentence,
+              pronunciation: scrapedData.pronunciation,
+              index: index,
+              description: '',
+            }
+            index += 1;
+            const success = await onSubmit(newFormData);
+            if(!success){
+              throw new Error("データベースへ単語を追加できませんでした" + newFormData);
+            }
+          }
+        };
+        reader.readAsText(wordsFile);
+      } else {
+        console.error("ファイルが読み込めません");
+        throw new Error("ファイルが読み込めません" + wordsFile);
+      }
+      
+    } catch (err: any) {
+      throw new Error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <form 
       onSubmit={(e) => {e.preventDefault();handleSubmit()}} 
@@ -158,22 +219,36 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
         <span>
             <h2 className="w-full flex text-2xl font-bold text-gray-800 mb-6">単語を追加</h2>
         </span>
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-row gap-2">
             <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-                {loading ? '追加中...' : '追加 (Ctrl + ; )'}
+                {loading ? '追加中...' : '追加'}
             </button>
             <button
                 type="button"
                 onClick={onCancel}
-                className="flex-1 py-2 px-4 bg-gray-200 text-gray-700 font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
+                className="py-2 px-4 bg-gray-200 text-gray-700 font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
             >
                 キャンセル
             </button>
         </div>
+      </div>
+      {/* ファイルから単語データを追加 */}
+      <div className="flex gap-2 items-center mb-3">
+        <input
+          type='file'
+          onChange={(e) => {setWordsFile(e.target.files?.[0] || null)}}
+          className="px-3 py-2 border border-gray-300 rounded-md file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-500 file:text-white file:cursor-pointer hover:file:bg-blue-600"
+        />
+        <button
+          onClick={handleAddWordsInFile}
+          className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+        >
+          ファイルから追加
+        </button>
       </div>
 
       <div className="space-y-6">
