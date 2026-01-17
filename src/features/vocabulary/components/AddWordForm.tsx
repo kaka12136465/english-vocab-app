@@ -16,7 +16,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
     antonyms: [],
     exampleSentence: '',
     pronunciation: '',
-    index: -1,
+    index: 0,
     description: ''
   });
   const [loading, setLoading] = useState(false);
@@ -94,7 +94,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
           antonyms: [],
           exampleSentence: '',
           pronunciation: '',
-          index: -1,
+          index: 0,
           description: '',
         });
       }
@@ -196,10 +196,9 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
             <p className='text-center'>番号：</p>
             <input
               type="number"
-              value={formData.index}
+              value={formData.index > 0 ? formData.index : ""}
               onChange={(e) => setFormData(prev => ({ ...prev, index: Number(e.target.value) }))}
               className='focus:outline-none w-16'
-              placeholder="例: apple"
               required
             />
           </div>

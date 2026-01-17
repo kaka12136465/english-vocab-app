@@ -15,6 +15,7 @@ export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord, setShowA
 
   return (
     <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4">
+      <p>{word.index}</p>
       <div className="flex justify-between items-start mb-2">
         <span>
           <h3 className="text-xl font-bold text-gray-800">{word.english}</h3>

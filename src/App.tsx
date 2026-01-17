@@ -16,6 +16,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState<AppPage>('auth');
   const [quizMode, setQuizMode] = useState<QuizMode>('english-to-japanese');
   const [wordCount, setWordCount] = useState<number>(10);
+  const [isLoadingWords, setIsLoadingWords] = useState(false);
   const [selectedWordBookIdForWords, setSelectedWordBookIdForWords] = useState<string>('');
   const [selectedWordBookIdForQuiz, setSelectedWordBookIdForQuiz] = useState<string>('');
 
@@ -48,6 +49,7 @@ function App() {
 
   // クイズ開始処理
   const handleStartQuiz = async (mode: QuizMode, wordCount: number, wordBookId: string) => {
+    setIsLoadingWords(true);
     try {
       setQuizMode(mode);
       setWordCount(wordCount);
@@ -56,6 +58,8 @@ function App() {
     } catch (error) {
       console.error('Error starting quiz:', error);
       alert('クイズの開始に失敗しました');
+    } finally {
+      setIsLoadingWords(false);
     }
   };
 
@@ -74,6 +78,30 @@ function App() {
   const handleBackToHome = () => {
     setCurrentPage('home');
   };
+
+  // ローディング画面
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4"></div>
+          <p className="text-lg text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 単語読み込み中
+  if (isLoadingWords) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mb-4"></div>
+          <p className="text-lg text-gray-600">問題を準備しています...</p>
+        </div>
+      </div>
+    );
+  }
 
   // ページ表示
   switch (currentPage) {
