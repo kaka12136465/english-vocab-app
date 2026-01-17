@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AddWordFormData } from '../types/vocabulary.types';
 import { scrapeWord, translateEnToJp } from '../services/wordSearchingService';
 
@@ -21,13 +21,18 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [isSearchLoading, setIsSearchLoading] = useState(false);
+  const [isSearched, setIsSearched] = useState(false);
+
+  const searchButtonRef = useRef<HTMLButtonElement>(null);
+  const addButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     const handleKeyPress = (event: KeyboardEvent) => {
       if (event.ctrlKey && event.key === ";") {
         event.preventDefault();
         handleSubmit();
-      }
+      } 
     }
 
     window.addEventListener("keydown", handleKeyPress);
@@ -98,6 +103,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
           description: '',
         });
       }
+      setIsSearched(false);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -107,10 +113,14 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
 
   // formData.englishの類義語、対義語、例文をスクレイピングし、
   const handleSearch = async () => {
+    
     if(formData.english.length === 0){
       setError("英単語は必須です");
       return;
     }
+
+    setIsSearchLoading(true);
+
     console.log("searching", formData.english);
     const word = await scrapeWord(formData.english);
     console.log("scraping result", word);
@@ -120,6 +130,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
 
     if(!word.isFound){
       setError("英単語が見つかりません");
+      setIsSearchLoading(false);
       return;
     }
     const newFormData: AddWordFormData = {
@@ -134,10 +145,15 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
     }
     setFormData(newFormData);
     console.log("search result", newFormData);
+    setIsSearchLoading(false);
+    setIsSearched(true);
   }
 
   return (
-    <form onSubmit={(e) => {e.preventDefault();handleSubmit()}} className="bg-white rounded-lg shadow-md p-6">
+    <form 
+      onSubmit={(e) => {e.preventDefault();handleSubmit()}} 
+      className="bg-white rounded-lg shadow-md p-6"
+    >
       <div className="flex justify-between items-start mb-2">
         <span>
             <h2 className="w-full flex text-2xl font-bold text-gray-800 mb-6">単語を追加</h2>
@@ -175,23 +191,53 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
           <input
             type="text"
             value={formData.english}
-            onChange={(e) => setFormData(prev => ({ ...prev, english: e.target.value }))}
+            onChange={(e) => {setFormData(prev => ({ ...prev, english: e.target.value })); setIsSearchLoading(false);}}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            autoFocus
             placeholder="例: apple"
             required
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                if(isSearched) setIsSearched(false);
+                e.preventDefault();
+                setTimeout(()=>{
+                  searchButtonRef.current?.focus();
+                }, 1);
+              }
+            }}
           />
         </div>
 
         
         <div className='flex flex-row justify-start items-center gap-x-3'>
-          {/* スクレイピングボタン */}
-          <button
-            type='button' 
-            onClick={handleSearch}
-            className='mr-4 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
-          >
-            検索
-          </button>
+          {isSearched ? 
+            <button
+              type="submit"
+              disabled={loading}
+              className="mr-4 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              ref={addButtonRef}
+            >
+              {loading ? '追加中...' : '追加'}
+            </button> :
+            <button
+              type='button' 
+              onClick={handleSearch}
+              disabled={isSearchLoading}
+              ref={searchButtonRef}
+              onKeyDown={async (e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  await handleSearch();
+                  setTimeout(() => {
+                    addButtonRef.current?.focus();
+                  }, 1);
+                }
+              }}
+              className='mr-4 py-2 px-4 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+            >
+              {isSearchLoading ? "待機中..." : "検索"}
+            </button> 
+          }
           <div className="flex flex-none w-fit px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500">
             <p className='text-center'>番号：</p>
             <input

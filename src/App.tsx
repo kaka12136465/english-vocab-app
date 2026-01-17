@@ -61,6 +61,7 @@ function App() {
     } finally {
       setIsLoadingWords(false);
     }
+
   };
 
   // マイ単語帳一覧を開く
