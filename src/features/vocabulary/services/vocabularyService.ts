@@ -243,6 +243,8 @@ export const addUserWord = async (
       audioUrl: '',
       isPublic,
       wordBookId: '', // 必要に応じて単語帳IDを設定
+      index: formData.index,
+      description: formData.description,
     };
 
     const docRef = await addDoc(collection(db, USER_WORDS_COLLECTION), {
@@ -312,6 +314,8 @@ export const getAllWordsForUser = async (userId: string): Promise<Word[]> => {
       audioUrl: uw.audioUrl,
       createdAt: uw.createdAt,
       wordBookId: uw.wordBookId,
+      index: uw.index,
+      description: uw.description,
     }));
 
     return [...commonWords, ...userWordsAsWords];

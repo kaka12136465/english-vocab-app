@@ -10,6 +10,8 @@ export interface Word {
   audioUrl: string;
   createdAt?: Date; // 作成日時（オプション）
   wordBookId: string; // この単語を所有している単語帳のID
+  index: number; // インデックス
+  description: string; // 単語の補足説明
 }
 
 // 単語帳データ型

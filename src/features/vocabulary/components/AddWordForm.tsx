@@ -5,9 +5,10 @@ import { scrapeWord, translateEnToJp } from '../services/wordSearchingService';
 interface AddWordFormProps {
   onSubmit: (formData: AddWordFormData) => Promise<boolean>;
   onCancel: () => void;
+  wordsNum: number;
 }
 
-export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) => {
+export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wordsNum }) => {
   const [formData, setFormData] = useState<AddWordFormData>({
     english: '',
     japanese: [''],
@@ -15,6 +16,8 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
     antonyms: [],
     exampleSentence: '',
     pronunciation: '',
+    index: -1,
+    description: ''
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -91,6 +94,8 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
           antonyms: [],
           exampleSentence: '',
           pronunciation: '',
+          index: -1,
+          description: '',
         });
       }
     } catch (err: any) {
@@ -111,6 +116,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
     console.log("scraping result", word);
     const translateResponse:string = await translateEnToJp(formData.english);
     console.log("translate result", translateResponse);
+    const index = wordsNum + 1;
 
     if(!word.isFound){
       setError("英単語が見つかりません");
@@ -123,6 +129,8 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
       synonyms: Array.from(word.synonyms),
       exampleSentence: word.exampleSentence,
       pronunciation: word.pronunciation,
+      index: index,
+      description: '',
     }
     setFormData(newFormData);
     console.log("search result", newFormData);
@@ -174,14 +182,28 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
           />
         </div>
 
-        {/* スクレイピングボタン */}
-        <button 
-          type='button' 
-          onClick={handleSearch}
-          className='flex-1 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
-        >
-          検索
-        </button>
+        
+        <div className='flex flex-row justify-start items-center gap-x-3'>
+          {/* スクレイピングボタン */}
+          <button
+            type='button' 
+            onClick={handleSearch}
+            className='mr-4 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+          >
+            検索
+          </button>
+          <div className="flex flex-none w-fit px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500">
+            <p className='text-center'>番号：</p>
+            <input
+              type="number"
+              value={formData.index}
+              onChange={(e) => setFormData(prev => ({ ...prev, index: Number(e.target.value) }))}
+              className='focus:outline-none w-16'
+              placeholder="例: apple"
+              required
+            />
+          </div>
+        </div>
 
         {/* 日本語訳 */}
         <div>
@@ -298,6 +320,18 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel }) 
             onChange={(e) => setFormData(prev => ({ ...prev, exampleSentence: e.target.value }))}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="例: I eat an apple every day."
+            rows={3}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            説明文（任意）
+          </label>
+          <textarea
+            value={formData.description}
+            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+            placeholder="例: 「瞳のリンゴ」=「目に入れても痛くないほど可愛い存在」という意味のイディオム「The apple of one's eye」としても使われます"
             rows={3}
           />
         </div>

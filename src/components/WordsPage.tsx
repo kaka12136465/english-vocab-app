@@ -103,6 +103,7 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
             <AddWordForm
               onSubmit={handleAddWord}
               onCancel={() => setShowAddForm(false)}
+              wordsNum={words.length}
             />
           </div>
         )}

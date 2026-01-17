@@ -8,6 +8,8 @@ export interface AddWordFormData {
   antonyms: string[];
   exampleSentence: string;
   pronunciation: string;
+  index: number;
+  description: string;
 }
 
 // ユーザー個別の単語（マイ単語帳）
