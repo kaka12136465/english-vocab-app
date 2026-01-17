@@ -16,22 +16,27 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
     {
       value: 'english-to-japanese',
       label: '英語 → 日本語',
-      description: '英単語を見て日本語訳を答える',
+      description: '英 → 和',
       icon: '🇬🇧 → 🇯🇵',
     },
     {
       value: 'japanese-to-english',
       label: '日本語 → 英語',
-      description: '日本語訳を見て英単語を答える',
+      description: '和 → 英',
       icon: '🇯🇵 → 🇬🇧',
     },
     {
       value: 'audio-to-japanese',
       label: '音声 → 日本語',
-      description: '音声を聞いて日本語訳を答える',
+      description: '英音声 → 和',
       icon: '🔊 → 🇯🇵',
     },
   ];
+
+  const modeMap = new Map<string, string>()
+  quizModes.map((value) => {
+    modeMap.set(value.description, value.value);
+  })
 
   useEffect (() => {
     const fetchWordBooks = async () => {
@@ -61,17 +66,6 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
       {/* メインコンテンツ */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-2xl shadow-xl p-8">
-          {/* タイトル */}
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-2">
-              クイズモードを選択
-            </h2>
-            <p className="text-gray-600">
-              学習したいモードを選んでクイズを開始しましょう
-            </p>
-          </div>
-          
-          
           <div className="space-y-4 mb-8">
             {/* 単語帳選択 */}
             <select 
@@ -85,51 +79,22 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
                 </option>
                 ))}
             </select>
+            
 
             {/* モード選択 */}
-            {quizModes.map((mode) => (
-              <button
-                key={mode.value}
-                onClick={() => setSelectedMode(mode.value)}
-                className={`w-full p-6 rounded-xl border-2 transition-all text-left ${
-                  selectedMode === mode.value
-                    ? 'border-primary-500 bg-primary-50 shadow-md'
-                    : 'border-gray-200 hover:border-primary-300 hover:bg-gray-50'
-                }`}
-              >
-                <div className="flex items-center gap-4">
-                  <span className="text-4xl">{mode.icon}</span>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-bold text-gray-800 mb-1">
-                      {mode.label}
-                    </h3>
-                    <p className="text-sm text-gray-600">{mode.description}</p>
-                  </div>
-                  <div
-                    className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
-                      selectedMode === mode.value
-                        ? 'border-primary-500 bg-primary-500'
-                        : 'border-gray-300'
-                    }`}
-                  >
-                    {selectedMode === mode.value && (
-                      <svg
-                        className="w-4 h-4 text-white"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                    )}
-                  </div>
-                </div>
-              </button>
-            ))}
           </div>
+
+          <select 
+            value={selectedMode} 
+            onChange={(e) => {setSelectedMode(modeMap.get(e.target.value ?? "英 → 和") as QuizMode);}}
+            className="px-4 py-2 border rounded"
+          >
+            {Array.from(modeMap.keys()).map((item, index) => (
+              <option key={index} value={item}>
+                {item}
+              </option>
+              ))}
+          </select>
 
           {/* 出題数設定 */}
           <div className="mb-8">

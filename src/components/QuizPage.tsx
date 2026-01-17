@@ -70,7 +70,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
     const isAudioMode = quizState.config.mode === 'audio-to-japanese';
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 py-12 px-4 pt-16">
         {/* 戻るボタン */}
         <div className="max-w-2xl mx-auto mb-4">
           <button
@@ -105,7 +105,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
 
   // データがない場合（通常は発生しない）
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center pt-16">
       <div className="text-center">
         <p className="text-xl text-gray-600 mb-4">クイズデータの読み込み中...</p>
         <button
