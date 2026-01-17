@@ -54,7 +54,7 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 pt-16">
       {/* ヘッダー */}
       
 

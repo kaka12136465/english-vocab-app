@@ -20,7 +20,7 @@ export const WordBooksPage: React.FC<WordBooksPageProps> = ({onBack, onOpenWords
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 pt-16">
       {/* ヘッダー */}
       <header className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

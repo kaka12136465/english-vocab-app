@@ -54,7 +54,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
     const summary = getQuizSummary();
     
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 py-12 px-4">
+      <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 py-12 px-4 pt-16">
         <QuizResult
           summary={summary}
           answers={quizState.answers}
