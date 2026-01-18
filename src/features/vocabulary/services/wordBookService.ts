@@ -18,7 +18,8 @@ export const getWordsInWordBook = async (wordBookId: string): Promise<Word[]> =>
                 return { id: doc.id, ...doc.data() } as Word;
             }
         })
-        .filter((word): word is Word => word !== undefined);
+        .filter((word): word is Word => word !== undefined)
+        .sort((w1, w2) => w1.index - w2.index);
   } catch (error) {
     console.error("Error fetching word books:", error);
     throw new Error("単語帳一覧の取得に失敗しました");
