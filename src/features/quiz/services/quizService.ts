@@ -54,7 +54,7 @@ export const checkAnswer = (
  */
 export const checkCorrectTranslation = async (english: string, japanese: string) => {
   try{
-    const prompt = english + "の和訳として「" + japanese + "」は正しい？true,falseのみ出力";
+    const prompt = english + "の和訳として「" + japanese + "」は品詞含め正しい？true,falseのみ出力";
     console.log("プロンプト", prompt);
 
     const response = await requestGemini(prompt);
