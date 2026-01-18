@@ -1,30 +1,53 @@
-import { useState, useCallback } from 'react';
-import { Word, QuizMode } from '@/types';
-import { QuizAnswer, QuizState } from '../types/quiz.types';
+import { useCallback } from 'react';
+import { Word, QuizMode} from '@/types';
+import { QuizAnswer, QuizQuestionData, QuizState } from '../types/quiz.types';
 import * as quizService from '../services/quizService';
 import {getProgressStats, updateUserProgress } from '@/features/userProgress/services/progressService';
 import { checkCorrectTranslation } from '../services/quizService';
-import { updateWord } from '@/features/vocabulary/services/wordBookService';
+import { getWordsInWordBook, updateWord } from '@/features/vocabulary/services/wordBookService';
+
+interface useQuizProps {
+  userId: string | null;
+  wordBookId: string;
+  mode: QuizMode;
+  words: Word[];
+  wordCount: number;
+  quizState: QuizState;
+  setWords: (words: Word[]) => void;
+  setMode: (mode: QuizMode) => void;
+  setWordCount: (wordCount: number) => void;
+  setQuizState: (quizState: QuizState) => void;
+}
+
+interface useQuizReturnProps{
+  currentQuestion: QuizQuestionData;
+  initializeQuiz: () => Promise<void>;
+  submitAnswer:(userAnswer: string) => Promise<boolean>;
+  nextQuestion:() => Promise<void>;
+  resetQuiz: () => void;
+  playQuestionAudio:() => void;
+  getQuizSummary: () => quizService.QuizSummary;
+  checkUserAnswer: () => Promise<boolean>;
+  addJpToEnWord: (word: Word, japanese: string) => Promise<void>;
+}
 
 /**
  * クイズ機能を管理するカスタムフック
  */
-export const useQuiz = (userId: string | null) => {
-  const [quizState, setQuizState] = useState<QuizState>({
-    config: null,
-    questions: [],
-    currentQuestionIndex: 0,
-    answers: [],
-    isComplete: false,
-  });
-
-  const [initialQuizState, setInitialQuizState] = useState<QuizState>(quizState);
+export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wordBookId, words, mode, wordCount, quizState, setWords, setMode, setWordCount, setQuizState}) => {
 
   /**
-   * クイズを開始
+   * クイズをリセット
    */
-  const startQuiz = useCallback((words: Word[], mode: QuizMode, wordCount: number) => {
-    const selectedWords = words.slice(0, wordCount);
+  const resetQuiz = useCallback(() => {
+    if(!mode){
+      console.error("クイズのモードが選択されていません");
+      return;
+    }
+
+    // ランダムにシャッフル
+    const shuffled = [...words].sort(() => 0.5 - Math.random());
+    const selectedWords = shuffled.slice(0, Math.min(wordCount, shuffled.length));
     const questions = selectedWords.map(word => 
       quizService.generateQuestion(word, mode)
     );
@@ -37,10 +60,39 @@ export const useQuiz = (userId: string | null) => {
       isComplete: false,
     };
 
-    setInitialQuizState(newQuizState);
     setQuizState(newQuizState);
-    return newQuizState;
-  }, []);
+  }, [mode, wordCount, words]);
+
+  /**
+   * クイズを開始
+   */
+  const initializeQuiz = useCallback(async () => {
+    const words = await getWordsInWordBook(wordBookId);
+    console.log(words);
+    await setWords(words);
+    
+    if(!mode){
+      console.error("クイズのモードが選択されていません");
+      return;
+    }
+    // ランダムにシャッフル
+    const shuffled = [...words].sort(() => 0.5 - Math.random());
+    const selectedWords = shuffled.slice(0, Math.min(wordCount, shuffled.length));
+    const questions = selectedWords.map(word => 
+      quizService.generateQuestion(word, mode)
+    );
+
+    const newQuizState: QuizState = {
+      config: { mode, wordCount },
+      questions: questions,
+      currentQuestionIndex: 0,
+      answers: [],
+      isComplete: false,
+    };
+
+    setQuizState(newQuizState);
+  }, [mode, wordCount]);
+
   
 
   /**
@@ -62,10 +114,10 @@ export const useQuiz = (userId: string | null) => {
       correctAnswers: currentQuestion.correctAnswers,
     };
 
-    setQuizState(prev => ({
-      ...prev,
-      answers: prev.answers.concat([answer])
-    }))
+    setQuizState({
+      ...quizState,
+      answers: quizState.answers.concat([answer])
+    })
     /*
     */
     return isCorrect;
@@ -78,15 +130,15 @@ export const useQuiz = (userId: string | null) => {
    */
   const nextQuestion = useCallback(async () => {
     if (quizState.currentQuestionIndex < quizState.questions.length - 1) {
-      setQuizState(prev => ({
-        ...prev,
-        currentQuestionIndex: prev.currentQuestionIndex + 1
-      }));
+      setQuizState({
+        ...quizState,
+        currentQuestionIndex: quizState.currentQuestionIndex + 1
+      });
     } else {
-      setQuizState(prev => ({
-        ...prev,
+      setQuizState({
+        ...quizState,
         isComplete: true
-      }))
+      })
       // 進捗を更新（ユーザーがログイン中の場合）
       if (userId) {
         quizState.answers.forEach(async answer => {
@@ -105,12 +157,7 @@ export const useQuiz = (userId: string | null) => {
     }
   }, [quizState]);
 
-  /**
-   * クイズをリセット
-   */
-  const resetQuiz =() => {
-    setQuizState(initialQuizState);
-  };
+
 
   /**
    * 音声を再生
@@ -156,9 +203,9 @@ export const useQuiz = (userId: string | null) => {
     }
     
     latestAnswer.isCorrect = true;
-    setQuizState(prev => ({
-      ...prev,
-    }));
+    setQuizState({
+      ...quizState,
+    });
 
     return isCorrect;
   }, [quizState.answers])
@@ -168,15 +215,13 @@ export const useQuiz = (userId: string | null) => {
   }, [quizState.answers])
 
   return {
-    quizState,
     currentQuestion: quizState.questions[quizState.currentQuestionIndex],
-    startQuiz,
+    initializeQuiz,
     submitAnswer,
     nextQuestion,
     resetQuiz,
     playQuestionAudio,
     getQuizSummary,
-    setQuizState,
     checkUserAnswer,
     addJpToEnWord,
   };

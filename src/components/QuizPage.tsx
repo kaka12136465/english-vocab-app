@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { QuizCard } from '@/features/quiz/components/QuizCard';
 import { QuizResult } from '@/features/quiz/components/QuizResult';
 import { useQuiz } from '@/features/quiz/hooks/useQuiz';
-import { QuizMode } from '@/types';
-import { getWordsInWordBook } from '@/features/vocabulary/services/wordBookService';
+import { QuizMode, Word } from '@/types';
+import { QuizState } from '@/features/quiz/types/quiz.types';
 
 interface QuizPageProps {
   userId: string | null;
@@ -14,38 +14,50 @@ interface QuizPageProps {
 }
 
 export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, wordCount, wordBookId }) => {
+  const [quizWords, setWords] = useState<Word[]>([]);
+  const [quizMode, setMode] = useState<QuizMode>(mode);
+  const [quizWordCount, setWordCount] = useState<number>(wordCount);
+  const [quizState, setQuizState] = useState<QuizState>({
+    config: null,
+    questions: [],
+    currentQuestionIndex: 0,
+    answers: [],
+    isComplete: false,
+  });
+
   const {
-    quizState,
     currentQuestion,
     submitAnswer,
     nextQuestion,
     resetQuiz,
     playQuestionAudio,
     getQuizSummary,
-    startQuiz,
-    setQuizState,
+    initializeQuiz,
     checkUserAnswer,
     addJpToEnWord,
-  } = useQuiz(userId);
+  } = useQuiz({
+        userId: userId,
+        wordBookId: wordBookId, 
+        mode: quizMode, 
+        words: quizWords,
+        wordCount: quizWordCount, 
+        quizState: quizState, 
+        setWords: setWords, 
+        setMode: setMode, 
+        setWordCount: setWordCount, 
+        setQuizState: setQuizState
+      });
 
   useEffect(() => {
     const start = async () => {
       try {
         if (!userId) return;
-        const words = await getWordsInWordBook(wordBookId);
-
-        // ランダムにシャッフル
-        const shuffled = [...words].sort(() => 0.5 - Math.random());
-        const selectedWords = shuffled.slice(0, Math.min(wordCount, shuffled.length));
-
-        // ここでquizStateを変更したい
-        const newQuizState = startQuiz(selectedWords, mode, wordCount);
-        setQuizState(newQuizState);
+        await initializeQuiz();
       } catch (error) {
         console.error("Error fetching words:", error);
       }
     };
-    start(); 
+    start();
   }, []);
 
 

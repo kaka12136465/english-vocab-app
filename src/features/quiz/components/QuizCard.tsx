@@ -56,6 +56,8 @@ export const QuizCard: React.FC<QuizCardProps> = ({
     e.preventDefault();
 
     setLoading(true);
+    setIsAddJpButtonClicked(false);
+    setIsCheckButtonClicked(false);
     try {
       const correct = await onSubmit(userAnswer);
       setIsCorrect(correct);
