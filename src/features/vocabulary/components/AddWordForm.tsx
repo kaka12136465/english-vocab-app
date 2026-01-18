@@ -27,6 +27,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
 
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const addButtonRef = useRef<HTMLButtonElement>(null);
+  const inputEnRef = useRef<HTMLInputElement>(null);
 
   // ショートカットキー追加
   useEffect(() => {
@@ -110,6 +111,9 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
       setError(err.message);
     } finally {
       setLoading(false);
+      setTimeout(()=>{
+        inputEnRef.current?.focus();
+      }, 1);
     }
   };
 
@@ -123,32 +127,38 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
 
     setIsSearchLoading(true);
 
-    console.log("searching", formData.english);
-    const word = await scrapeWord(formData.english);
-    console.log("scraping result", word);
-    const translateResponse:string = await translateEnToJp(formData.english);
-    console.log("translate result", translateResponse);
-    const index = wordsNum + 1;
+    try{
+      console.log("searching", formData.english);
+      const word = await scrapeWord(formData.english);
+      console.log("scraping result", word);
+      const translateResponse:string = await translateEnToJp(formData.english);
+      console.log("translate result", translateResponse);
+      const index = wordsNum + 1;
 
-    if(!word.isFound){
-      setError("英単語が見つかりません");
+      if(!word.isFound){
+        setError("英単語が見つかりません");
+        setIsSearchLoading(false);
+        return;
+      }
+      const newFormData: AddWordFormData = {
+        english: word.english,
+        japanese: translateResponse.split(/[,、\n]/),
+        antonyms: Array.from(word.antonyms),
+        synonyms: Array.from(word.synonyms),
+        exampleSentence: word.exampleSentence,
+        pronunciation: word.pronunciation,
+        index: index,
+        description: '',
+      }
+      setFormData(newFormData);
+      console.log("search result", newFormData);
+    }catch(err){
+      console.error("検索に失敗しました");
+      throw new Error();
+    }finally{
       setIsSearchLoading(false);
-      return;
+      setIsSearched(true);
     }
-    const newFormData: AddWordFormData = {
-      english: word.english,
-      japanese: translateResponse.split(/[,、\n]/),
-      antonyms: Array.from(word.antonyms),
-      synonyms: Array.from(word.synonyms),
-      exampleSentence: word.exampleSentence,
-      pronunciation: word.pronunciation,
-      index: index,
-      description: '',
-    }
-    setFormData(newFormData);
-    console.log("search result", newFormData);
-    setIsSearchLoading(false);
-    setIsSearched(true);
   }
 
   // ファイルの内容を読み込み、ファイルに書いてる単語をすべてデータベースへ追加する
@@ -271,6 +281,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
             autoFocus
             placeholder="例: apple"
             required
+            ref={inputEnRef}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 if(isSearched) setIsSearched(false);
