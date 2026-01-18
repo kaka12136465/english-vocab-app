@@ -87,7 +87,7 @@ export async function scrapeWord(word: string): Promise<ScrapingWordData> {
 
 export const translateEnToJp = async (enWord: string): Promise<string> => {
   try{
-    const prompt = enWord + "のすべての和訳のみをカンマ区切りで3つ"
+    const prompt = enWord + "のすべての和訳のみを単語を囲わずカンマ区切りで3つ"
     return requestGemini(prompt);
   }catch(err){
     console.error(err);
