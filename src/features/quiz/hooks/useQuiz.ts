@@ -36,6 +36,8 @@ interface useQuizReturnProps{
  */
 export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wordBookId, words, mode, wordCount, quizState, setWords, setMode, setWordCount, setQuizState}) => {
 
+  setMode;
+  setWordCount;
   /**
    * クイズをリセット
    */
