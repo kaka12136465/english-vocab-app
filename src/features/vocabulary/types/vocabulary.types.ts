@@ -1,4 +1,5 @@
 import { Word } from '@/types';
+import { Timestamp } from 'firebase/firestore';
 
 // 単語追加フォームのデータ
 export interface AddWordFormData {
@@ -16,7 +17,7 @@ export interface AddWordFormData {
 export interface UserWord extends Word {
   userId: string;
   isPublic: boolean; // 他のユーザーと共有するか
-  createdAt: Date;
+  createdAt: Timestamp;
 }
 
 export interface EditWordFormData extends AddWordFormData{

@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 // 基本的な単語データ型
 export interface Word {
   id: string;
@@ -8,10 +10,15 @@ export interface Word {
   exampleSentence: string;
   pronunciation: string; // 発音
   audioUrl: string;
-  createdAt?: Date; // 作成日時（オプション）
+  createdAt?: Timestamp; // 作成日時（オプション）
   wordBookId: string; // この単語を所有している単語帳のID
   index: number; // インデックス
   description: string; // 単語の補足説明
+}
+
+export interface UserData {
+  userId: string;
+  lastOpenedWordBookId: string;
 }
 
 // 単語帳データ型
@@ -19,7 +26,7 @@ export interface WordBook {
   id: string;
   name: string;
   description?: string;
-  createdAt: Date;
+  createdAt: Timestamp;
   ownerId: string; // 単語帳の所有者ユーザーID
 }
 
