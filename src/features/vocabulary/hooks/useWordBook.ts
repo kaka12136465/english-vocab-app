@@ -3,6 +3,7 @@ import { Word } from '@/types';
 import { AddWordFormData, EditWordFormData } from '../types/vocabulary.types';
 import * as vocabularyService from '../services/vocabularyService';
 import * as wordBookService from '../services/wordBookService';
+import { Timestamp } from 'firebase/firestore';
 
 /**
  * 単語管理を行うカスタムフック
@@ -57,7 +58,7 @@ export const useVocabulary = (wordBookId: string | null) => {
       await wordBookService.addWordToWordBook({
         ...formData,
         wordBookId: wordBookId!,
-        createdAt: new Date(),
+        createdAt: Timestamp.now(),
         audioUrl: '',
       });
 

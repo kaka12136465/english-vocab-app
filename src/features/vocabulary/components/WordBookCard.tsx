@@ -30,7 +30,7 @@ export const WordBookCard: React.FC<WordBookCardProps> = ({ wordBook, onOpenWord
         <div className="mt-4 text-gray-600">
           <p>{wordBook.description || '説明はありません'}</p>
           <p className="mt-2 text-sm text-gray-500">
-            作成日: {wordBook.createdAt ? new Date(wordBook.createdAt).toLocaleDateString() : '不明'}
+            作成日: {wordBook.createdAt ? wordBook.createdAt.toDate().toLocaleString('ja-JP') : '不明'}
           </p>
         </div>
       )}
