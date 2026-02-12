@@ -42,7 +42,7 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
     const fetchWordBooks = async () => {
       const wordBooks: WordBook[] = await getAllWordBooks();
 
-      wordBooks.sort((a, b) => {console.log(a, b);return a.createdAt?.toMillis() - b.createdAt?.toMillis()})
+      wordBooks.sort((a, b) => {return a.createdAt?.toMillis() - b.createdAt?.toMillis()})
       setWordBooks(wordBooks);
     }
     fetchWordBooks();

@@ -3,11 +3,13 @@ import { AddWordFormData } from '../types/vocabulary.types';
 import { scrapeWord, translateEnToJp } from '../services/wordSearchingService';
 
 interface AddWordFormProps {
-  onSubmit: (formData: AddWordFormData) => Promise<boolean>;
+  onSubmit: (formData: AddWordFormData) => Promise<boolean>; // handleAddWord関数を受け取る
   onCancel: () => void;
   wordsNum: number;
 }
 
+
+// WordsPageから呼ばれる
 export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wordsNum }) => {
   const [formData, setFormData] = useState<AddWordFormData>({
     english: '',

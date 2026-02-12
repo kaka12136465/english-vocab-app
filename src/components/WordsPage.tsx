@@ -13,10 +13,52 @@ interface WordsPageProps {
 }
 
 export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
+  type SortOption = 'createdAtDesc' | 'createdAtAsc' | 'englishAsc' | 'englishDesc' | "indexAsc" | "indexDesc";
+  const sortOptions: { value: SortOption; label: string }[] = [
+    { value: 'createdAtDesc', label: '作成日昇順' },
+    { value: 'createdAtAsc', label: '作成日降順' },
+    { value: 'englishAsc', label: '英辞書昇順' },
+    { value: 'englishDesc', label: '英辞書降順' },
+    { value: 'indexAsc', label: '番号昇順' },
+    { value: 'indexDesc', label: '番号降順' },
+  ];
+
   const { words, error, loadWordsInWordBook, addWord, updateWordInWordBook } = useVocabulary(wordBookId);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [edittingWord, setEdittingWord] = useState<Word | null>(null);
+  const [selectedSortOption, setSelectedSortOption] = useState<SortOption>("createdAtDesc");
+  const [sortedWords, setSortedWords] = useState<Word[]>([]);
+
+  useEffect(() => {
+    const sorted = sortWords(words, selectedSortOption);
+    setSortedWords(sorted);
+  }, [words, selectedSortOption]);
+
+  const sortWords = (words: Word[], option: SortOption): Word[] => {
+    switch (option) {
+      case 'createdAtDesc':
+        return [...words].sort((a, b) => b.createdAt!.toMillis() - a.createdAt!.toMillis());
+      case 'createdAtAsc':
+        return [...words].sort((a, b) => a.createdAt!.toMillis() - b.createdAt!.toMillis());
+      case 'englishAsc':
+        return [...words].sort((a, b) => a.english.localeCompare(b.english));
+      case 'englishDesc':
+        return [...words].sort((a, b) => b.english.localeCompare(a.english));
+      case 'indexAsc':
+        return [...words].sort((a, b) => (a.index ?? 0) - (b.index ?? 0));
+      case 'indexDesc':
+        return [...words].sort((a, b) => (b.index ?? 0) - (a.index ?? 0));
+      default:
+        return words;
+    }
+  };
+
+  const handleSortChange = (option: string) => {
+    setSelectedSortOption(option as SortOption);
+    const sortedWords = sortWords(words, selectedSortOption as SortOption);
+    setSortedWords(sortedWords);
+  };
 
   useEffect(() => {
     loadWordsInWordBook();
@@ -103,7 +145,7 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
             <AddWordForm
               onSubmit={handleAddWord}
               onCancel={() => setShowAddForm(false)}
-              wordsNum={words.length}
+              wordsNum={sortedWords.length}
             />
           </div>
         )}
@@ -119,7 +161,16 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
 
         {/* ローディング */}
         {/* 単語リスト */}
-        {words.length === 0 && !showAddForm && (
+        <select 
+          value={selectedSortOption} 
+          onChange={(e) => {handleSortChange(e.target.value);}}
+          className="px-4 py-2 border rounded"
+        >
+          {sortOptions.map(option => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+        {sortedWords.length === 0 && !showAddForm && (
           <div className="text-center py-12 bg-white rounded-lg shadow">
             <svg
               className="mx-auto h-12 w-12 text-gray-400 mb-4"
@@ -139,16 +190,16 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
           </div>
         )}
 
-        {words.length > 0 && (
+        {sortedWords.length > 0 && (
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-800">
-                登録単語: {words.length}件
+                登録単語: {sortedWords.length}件
               </h2>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {words.map((word) => (
+              {sortedWords.map((word) => (
                 <WordCard 
                   key={word.id}
                   word={word}
