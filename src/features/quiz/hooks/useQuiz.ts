@@ -47,7 +47,9 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
       return;
     }
     const range = quizRange || [0, words.length];
-    const rangeWords = words.slice(range[0], range[1]);
+    const rangeWords = words.filter((word) => {
+      return word.index >= range[0] && word.index < range[1];
+    });
     if(rangeWords.length === 0){
       console.error("指定された範囲に単語が存在しません");
       throw new Error("指定された範囲に単語が存在しません");
@@ -84,7 +86,9 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
     }
 
     const range = quizRange || [0, words.length];
-    const rangeWords = words.slice(range[0], range[1]);
+    const rangeWords = words.filter((word) => {
+      return word.index >= range[0] && word.index < range[1];
+    });
     if(rangeWords.length === 0){
       console.error("指定された範囲に単語が存在しません");
       alert("指定された範囲に単語が存在しません");
