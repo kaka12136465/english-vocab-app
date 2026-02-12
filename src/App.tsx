@@ -15,6 +15,7 @@ function App() {
   const { user, loading, signIn, signUp, signOut } = useAuth();
   const [currentPage, setCurrentPage] = useState<AppPage>('auth');
   const [quizMode, setQuizMode] = useState<QuizMode>('english-to-japanese');
+  const [quizRange, setQuizRange] = useState<[number, number] | undefined>();
   const [wordCount, setWordCount] = useState<number>(10);
   const [isLoadingWords, setIsLoadingWords] = useState(false);
   const [selectedWordBookIdForWords, setSelectedWordBookIdForWords] = useState<string>('');
@@ -48,10 +49,11 @@ function App() {
   };
 
   // クイズ開始処理
-  const handleStartQuiz = async (mode: QuizMode, wordCount: number, wordBookId: string) => {
+  const handleStartQuiz = async (mode: QuizMode, quizRange: [number, number], wordCount: number, wordBookId: string) => {
     setIsLoadingWords(true);
     try {
       setQuizMode(mode);
+      setQuizRange(quizRange);
       setWordCount(wordCount);
       setCurrentPage('quiz');
       setSelectedWordBookIdForQuiz(wordBookId);
@@ -135,7 +137,7 @@ function App() {
               onOpenWordBooks={handleOpenWordBooks}
               setCurrentPage={setCurrentPage}
             />
-          <QuizPage userId={user?.uid || null} onBackToHome={handleBackToHome} mode={quizMode} wordCount={wordCount} wordBookId={selectedWordBookIdForQuiz}/>;
+          <QuizPage userId={user?.uid || null} onBackToHome={handleBackToHome} mode={quizMode} quizRange={quizRange} wordCount={wordCount} wordBookId={selectedWordBookIdForQuiz}/>;
         </div>
       );
     case 'wordBooks':

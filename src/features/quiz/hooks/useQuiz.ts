@@ -10,8 +10,9 @@ interface useQuizProps {
   userId: string | null;
   wordBookId: string;
   mode: QuizMode;
-  words: Word[];
-  wordCount: number;
+  words: Word[];  // 指定単語帳の全単語
+  wordCount: number; // 出題数
+  quizRange?: [number, number]; // 出題範囲(指定しないなら全範囲)
   quizState: QuizState;
   setWords: (words: Word[]) => void;
   setMode: (mode: QuizMode) => void;
@@ -34,8 +35,7 @@ interface useQuizReturnProps{
 /**
  * クイズ機能を管理するカスタムフック
  */
-export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wordBookId, words, mode, wordCount, quizState, setWords, setMode, setWordCount, setQuizState}) => {
-
+export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wordBookId, words, mode, wordCount, quizRange, quizState, setWords, setMode, setWordCount, setQuizState}) => {
   setMode;
   setWordCount;
   /**
@@ -46,9 +46,15 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
       console.error("クイズのモードが選択されていません");
       return;
     }
+    const range = quizRange || [0, words.length];
+    const rangeWords = words.slice(range[0], range[1]);
+    if(rangeWords.length === 0){
+      console.error("指定された範囲に単語が存在しません");
+      throw new Error("指定された範囲に単語が存在しません");
+    }
 
     // ランダムにシャッフル
-    const shuffled = [...words].sort(() => 0.5 - Math.random());
+    const shuffled = [...rangeWords].sort(() => 0.5 - Math.random());
     const selectedWords = shuffled.slice(0, Math.min(wordCount, shuffled.length));
     const questions = selectedWords.map(word => 
       quizService.generateQuestion(word, mode)
@@ -70,15 +76,23 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
    */
   const initializeQuiz = useCallback(async () => {
     const words = await getWordsInWordBook(wordBookId);
-    console.log(words);
     await setWords(words);
     
     if(!mode){
       console.error("クイズのモードが選択されていません");
       return;
     }
+
+    const range = quizRange || [0, words.length];
+    const rangeWords = words.slice(range[0], range[1]);
+    if(rangeWords.length === 0){
+      console.error("指定された範囲に単語が存在しません");
+      alert("指定された範囲に単語が存在しません");
+      throw new Error("指定された範囲に単語が存在しません");
+    }
+
     // ランダムにシャッフル
-    const shuffled = [...words].sort(() => 0.5 - Math.random());
+    const shuffled = [...rangeWords].sort(() => 0.5 - Math.random());
     const selectedWords = shuffled.slice(0, Math.min(wordCount, shuffled.length));
     const questions = selectedWords.map(word => 
       quizService.generateQuestion(word, mode)

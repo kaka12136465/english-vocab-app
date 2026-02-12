@@ -3,7 +3,7 @@ import { QuizMode, WordBook } from '@/types';
 import { getAllWordBooks } from '@/features/vocabulary/services/vocabularyService';
 
 interface HomePageProps {
-  onStartQuiz: (mode: QuizMode, wordCount: number, wordBookId: string) => void;
+  onStartQuiz: (mode: QuizMode, quizRange: [number, number], wordCount: number, wordBookId: string) => void;
 }
 
 export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
@@ -11,11 +11,12 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
   const [selectedWordBookIndex, setSelectedWordBookIndex] = useState<number>(0);
   const [wordCount, setWordCount] = useState(10);
   const [wordBooks, setWordBooks] = useState<WordBook[]>([]);
+  const [quizRange, setQuizRange] = useState<[string, string]>(['1', '100']);
 
   const quizModes: { value: QuizMode; label: string; description: string; icon: string }[] = [
     {
       value: 'english-to-japanese',
-      label: '英語 → 日本語',
+      label: '英語 → 日本語', 
       description: '英 → 和',
       icon: '🇬🇧 → 🇯🇵',
     },
@@ -57,7 +58,7 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
       console.error("単語帳が存在しません");
       return;
     }
-    onStartQuiz(selectedMode, wordCount, wordBooks[selectedWordBookIndex].id);
+    onStartQuiz(selectedMode, [Number(quizRange[0]), Number(quizRange[1])], wordCount, wordBooks[selectedWordBookIndex].id);
   };
 
   return (
@@ -97,6 +98,21 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
               </option>
               ))}
           </select>
+          <div className="my-6">
+            <input
+              type="number"
+              value={quizRange[0]}
+              onChange={(e) => setQuizRange([e.target.value, quizRange[1]])}
+              className="w-20 px-2 py-1 ml-4 mr-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+            〜
+            <input
+              type="number"
+              value={quizRange[1]}
+              onChange={(e) => setQuizRange([quizRange[0], e.target.value])}
+              className="w-20 px-2 py-1 ml-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+            />
+          </div>
 
           {/* 出題数設定 */}
           <div className="mb-8">

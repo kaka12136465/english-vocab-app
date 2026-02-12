@@ -9,11 +9,12 @@ interface QuizPageProps {
   userId: string | null;
   onBackToHome: () => void;
   mode: QuizMode;
+  quizRange?: [number, number];
   wordCount: number;
   wordBookId: string;
 }
 
-export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, wordCount, wordBookId }) => {
+export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, quizRange, wordCount, wordBookId }) => {
   const [quizWords, setWords] = useState<Word[]>([]);
   const [quizMode, setMode] = useState<QuizMode>(mode);
   const [quizWordCount, setWordCount] = useState<number>(wordCount);
@@ -40,6 +41,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
         wordBookId: wordBookId, 
         mode: quizMode, 
         words: quizWords,
+        quizRange: quizRange,
         wordCount: quizWordCount, 
         quizState: quizState, 
         setWords: setWords, 
