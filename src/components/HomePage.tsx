@@ -115,24 +115,21 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
           </div>
 
           {/* 出題数設定 */}
-          <div className="mb-8">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              出題数: {wordCount}問
+          <div className="flex flex-row mb-8">
+            <label className="block pt-1 text-sm font-medium text-gray-700 mb-2">
+              出題数：
             </label>
-            <input
-              type="range"
-              min="5"
-              max="30"
-              step="5"
+            <select
               value={wordCount}
               onChange={(e) => setWordCount(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary-600"
-            />
-            <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>5問</span>
-              <span>15問</span>
-              <span>30問</span>
-            </div>
+              className="p-1 mb-2 border rounded "
+            >
+              {[...Array(10)].map((_, i) => (
+                <option key={(i+1)*5} value={(i+1)*5}>
+                  {(i+1)*5}問
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* スタートボタン */}
