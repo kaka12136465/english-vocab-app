@@ -14,47 +14,44 @@ export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord, setShowA
   const [showDetails, setShowDetails] = useState(false);
 
   return (
-    <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow p-4">
-      <p>{word.index}</p>
-      <div className="flex justify-between items-start mb-2">
-        <span>
-          <h3 className="text-xl font-bold text-gray-800">{word.english}</h3>
-          {word.pronunciation && (
-            <p className="text-sm text-gray-500">[{word.pronunciation}]</p>
-          )}
-        </span>
+    <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow pt-2 pb-2 pl-4 pr-4">
+      <div className="flex justify-between items-start">
+        <p className="mb-1 text-lg font-bold text-gray-800">{word.index}. {word.english}</p>
         
-        <div className="flex flex-col gap-2">
+        <div className="flex gap-6">
+          
           <button 
             onClick={async () => {await onDeleteWord(word.id); setEdittingWord(null); setShowEditForm(false);}}
-            className="text-primary-600 hover:text-primary-700 text-sm font-medium color-red"
+            className="text-red-600 hover:text-red-700 font-medium"
           >
             削除
           </button> 
 
           <button
-            onClick={() => setShowDetails(!showDetails)}
-            className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+            onClick={() => {setEdittingWord(word);setShowEditForm(true);setShowAddForm(false);}}
+            className="text-primary-600 hover:text-primary-700 font-medium"
           >
-            {showDetails ? '閉じる' : '詳細'}
+            編集
           </button>
 
           <button
-            onClick={() => {setEdittingWord(word);setShowEditForm(true);setShowAddForm(false);}}
-            className="text-primary-600 hover:text-primary-700 text-sm font-medium"
+            onClick={() => setShowDetails(!showDetails)}
+            className="text-primary-600 hover:text-primary-700 font-medium"
           >
-            編集
+            {showDetails ? '閉じる' : '詳細'}
           </button>
         </div>
       </div>
 
       <div className="space-y-2">
-        <div>
-          <p className="text-gray-800">{word.japanese.join(', ')}</p>
-        </div>
-
         {showDetails && (
           <>
+            <div>
+              <p className="text-gray-800">{word.japanese.join(', ')}</p>
+            </div>
+            {word.pronunciation && (
+              <p className="text-sm text-gray-500">[{word.pronunciation}]</p>
+            )}
             {word.synonyms.length > 0 && (
               <div>
                 <p className="text-sm text-gray-600">類義語:</p>

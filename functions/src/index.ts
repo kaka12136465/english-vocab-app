@@ -6,9 +6,9 @@ import * as logger from "firebase-functions/logger";
 export const useGemini = onRequest(async (req, res) => {
   try {
     // 本番環境では削除
-    res.set("Access-Control-Allow-Origin", "http://localhost:5173");
+    // res.set("Access-Control-Allow-Origin", "http://localhost:5173");
 
-    // res.set("Access-Control-Allow-Origin", "https://englishwordlearning-d636b.web.app");
+    res.set("Access-Control-Allow-Origin", "https://englishwordlearning-d636b.web.app");
     res.set("Access-Control-Allow-Methods", "POST");
     const ai = new GoogleGenAI({});
     const prompt = req.body;
@@ -16,7 +16,6 @@ export const useGemini = onRequest(async (req, res) => {
       model: "gemini-2.5-flash-lite",
       contents: prompt,
     });
-    console.log("AIからの応答", response.text);
 
     // レスポンスを返す
     res.json({
