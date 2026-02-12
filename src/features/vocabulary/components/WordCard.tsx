@@ -14,40 +14,37 @@ export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord, setShowA
   const [showDetails, setShowDetails] = useState(false);
 
   return (
-    <div className="bg-white rounded-lg shadow hover:shadow-md transition-shadow pt-2 pb-2 pl-4 pr-4">
+    <div  onClick={() => setShowDetails(!showDetails)} className="cursor-pointer bg-white rounded-lg shadow hover:shadow-md transition-shadow pt-2 pb-2 pl-4 pr-4">
       <div className="flex justify-between items-start">
-        <p className="mb-1 text-lg font-bold text-gray-800">{word.index}. {word.english}</p>
+        <p className="text-lg font-bold text-gray-800">{word.index}. {word.english}</p>
         
         <div className="flex gap-6">
-          
-          <button 
-            onClick={async () => {await onDeleteWord(word.id); setEdittingWord(null); setShowEditForm(false);}}
-            className="text-red-600 hover:text-red-700 font-medium"
-          >
-            削除
-          </button> 
-
           <button
-            onClick={() => {setEdittingWord(word);setShowEditForm(true);setShowAddForm(false);}}
-            className="text-primary-600 hover:text-primary-700 font-medium"
+            className="text-sm mt-1 text-primary-600 hover:text-primary-700 font-medium"
           >
-            編集
-          </button>
-
-          <button
-            onClick={() => setShowDetails(!showDetails)}
-            className="text-primary-600 hover:text-primary-700 font-medium"
-          >
-            {showDetails ? '閉じる' : '詳細'}
+            {showDetails ? '閉じる' : '詳細　'}
           </button>
         </div>
       </div>
 
-      <div className="space-y-2">
+      <div className="pt-2 space-y-2">
         {showDetails && (
           <>
-            <div>
-              <p className="text-gray-800">{word.japanese.join(', ')}</p>
+            <div className="flex gap-6">
+              <p className="flex-1 text-gray-800">{word.japanese.join(', ')}</p>
+              <button 
+                onClick={async () => {await onDeleteWord(word.id); setEdittingWord(null); setShowEditForm(false);}}
+                className="text-sm text-red-600 hover:text-red-700 font-medium"
+              >
+                削除
+              </button> 
+
+              <button
+                onClick={() => {setEdittingWord(word);setShowEditForm(true);setShowAddForm(false);}}
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+              >
+                編集
+              </button>
             </div>
             {word.pronunciation && (
               <p className="text-sm text-gray-500">[{word.pronunciation}]</p>
