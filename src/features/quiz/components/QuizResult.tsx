@@ -81,8 +81,11 @@ export const QuizResult: React.FC<QuizResultProps> = ({
               }`}
             >
               <div className="flex items-start justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">
-                  問題 {index + 1}
+                <span className="text-sm font-medium text-gray-700 pt-1">
+                  問題 {index + 1}：
+                </span>
+                <span className="font-bold flex-1 ml-1">
+                  {answer.word.english}
                 </span>
                 <span
                   className={`px-2 py-1 text-xs font-bold rounded ${
