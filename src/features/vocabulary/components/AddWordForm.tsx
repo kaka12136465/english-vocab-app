@@ -26,6 +26,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
   const [isSearchLoading, setIsSearchLoading] = useState(false);
   const [isSearched, setIsSearched] = useState(false);
   const [wordsFile, setWordsFile] = useState<File | null>(null);
+  const [addingWordsForm, setAddingWordsForm] = useState<string>("");
 
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const addButtonRef = useRef<HTMLButtonElement>(null);
@@ -107,6 +108,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
           index: 0,
           description: '',
         });
+        setError("");
       }
       setIsSearched(false);
     } catch (err: any) {
@@ -222,6 +224,51 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
     }
   }
 
+  const handleAddmultipleWords = async () => {
+    setLoading(true);
+    const addingWords: string[] = addingWordsForm.split(/\r?\n/).map(w => w.trim()).filter(w => w.length > 0);
+    if(addingWords.length === 0){
+      setError("追加する単語がありません");
+      return;
+    }
+    try{
+      let index = wordsNum + 1;
+      for(const word of addingWords){
+        console.log("searching", word);
+        const scrapedData = await scrapeWord(word);
+        console.log("scraping result", word);
+        if(!scrapedData.isFound){
+          setError("英単語が見つかりません: " + word);
+          setIsSearchLoading(false);
+          return;
+        }
+        const translateResponse:string = "テスト"//await translateEnToJp(word);
+        console.log("translate result", translateResponse);
+        const newFormData: AddWordFormData = {
+          english: word,
+          japanese: translateResponse.split(/[,、\n]/),
+          antonyms: Array.from(scrapedData.antonyms),
+          synonyms: Array.from(scrapedData.synonyms),
+          exampleSentence: scrapedData.exampleSentence,
+          pronunciation: scrapedData.pronunciation,
+          index: index,
+          description: '',
+        }
+        const success = await onSubmit(newFormData);
+        if(!success){
+          throw new Error("データベースへ単語を追加できませんでした" + newFormData);
+        }
+        index += 1;
+      }
+      setAddingWordsForm("");
+      setError("");
+    }catch(err){
+      console.error("まとめて単語追加に失敗しました");
+    }finally{
+      setLoading(false);
+    }
+  }
+
   return (
     <form 
       onSubmit={(e) => {e.preventDefault();handleSubmit()}} 
@@ -249,7 +296,8 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
         </div>
       </div>
       {/* ファイルから単語データを追加 */}
-      <div className="flex gap-2 items-center mb-3">
+      {false && 
+      <div aria-disabled={false} className="flex gap-2 items-center mb-3">
         <input
           type='file'
           onChange={(e) => {setWordsFile(e.target.files?.[0] || null)}}
@@ -260,6 +308,24 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
           className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
           ファイルから追加
+        </button>
+      </div>}
+
+      {/* 一気に単語を追加フォーム */}
+      <div className="flex flex-col"> 
+        <textarea
+          value={addingWordsForm}
+          className="[field-sizing:content] flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mb-3"
+          onChange={(e) => setAddingWordsForm(e.target.value)}
+          placeholder="まとめて単語を追加したい場合は、ここに単語を改行区切りで入力してください。"
+        /> 
+        <button
+          onClick={async () => {
+            await handleAddmultipleWords();
+          }}
+          className="mb-2 w-fit px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          まとめて追加
         </button>
       </div>
 
@@ -295,7 +361,6 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
             }}
           />
         </div>
-
         
         <div className='flex flex-row justify-start items-center gap-x-3'>
           {isSearched ? 
