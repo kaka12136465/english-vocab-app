@@ -27,6 +27,8 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
   const [isSearched, setIsSearched] = useState(false);
   const [wordsFile, setWordsFile] = useState<File | null>(null);
   const [addingWordsForm, setAddingWordsForm] = useState<string>("");
+  const [addingWordsLastIndex, setAddingWordsLastIndex] = useState<number>(wordsNum);
+  const [addingWords, setAddingWords] = useState<string[]>([]);
 
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const addButtonRef = useRef<HTMLButtonElement>(null);
@@ -260,9 +262,9 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
         if(!success){
           throw new Error("データベースへ単語を追加できませんでした" + newFormData);
         }
+        setAddingWordsForm(prev => prev.split("\n").filter(w => w.trim() !== word).join("\n"));
         index += 1;
       }
-      setAddingWordsForm("");
       setError("");
     }catch(err){
       console.error("まとめて単語追加に失敗しました");
@@ -312,15 +314,42 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
           ファイルから追加
         </button>
       </div>}
-
       {/* 一気に単語を追加フォーム */}
-      <div className="flex flex-col"> 
-        <textarea
+      <div className="flex flex-col">
+        {addingWords.map((word, index) => (
+          <div className="flex justify-between items-center gap-2 mb-1" key={index}>
+            <div className="flex flex-1 px-3 py-2 w-full border border-gray-300 rounded-md items-center gap-2 mb-1">
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={addingWordsLastIndex+index}
+                className="[field-sizing:content] focus:outline-none underline"
+                onChange={(e) => setAddingWordsLastIndex(Number(e.target.value)-index)}
+              />
+              ：
+              <span className="font-bold">{word}</span>
+            </div>
+            <button
+                onClick={() => {setAddingWords(prev => prev.filter((_, i) => i !== index));}}
+                className="shrink-0 px-3 py-1 text-red-600 hover:bg-red-700 rounded-md font-bold border border-red-600 bg-red-600 text-white"
+            >削除</button>
+          </div>
+        ))}
+        <input
           disabled={loading}
           value={addingWordsForm}
-          className="[field-sizing:content] flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mb-3"
+          type="text"
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mb-3"
           onChange={(e) => setAddingWordsForm(e.target.value)}
           placeholder="まとめて単語を追加したい場合は、ここに単語を改行区切りで入力してください。"
+          onKeyDown={(e) => {
+            if(e.key === "Enter"){
+              e.preventDefault();
+              setAddingWords(prev => [...prev, addingWordsForm]);
+              setAddingWordsForm("");
+            }
+          }}
         /> 
         {loading ? <span className="text-sm text-gray-500">追加中...</span> : <button
           onClick={async () => {
