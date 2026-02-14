@@ -15,7 +15,7 @@ interface QuizPageProps {
 }
 
 export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, quizRange, wordCount, wordBookId }) => {
-  const [quizWords, setWords] = useState<Word[]>([]);
+  const [targetWords, setTargetWords] = useState<Word[]>([]);
   const [quizMode, setMode] = useState<QuizMode>(mode);
   const [quizWordCount, setWordCount] = useState<number>(wordCount);
   const [quizState, setQuizState] = useState<QuizState>({
@@ -40,11 +40,11 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
         userId: userId,
         wordBookId: wordBookId, 
         mode: quizMode, 
-        words: quizWords,
+        words: targetWords,
         quizRange: quizRange,
         wordCount: quizWordCount, 
         quizState: quizState, 
-        setWords: setWords, 
+        setTargetWords: setTargetWords, 
         setMode: setMode, 
         setWordCount: setWordCount, 
         setQuizState: setQuizState
@@ -74,6 +74,8 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
           answers={quizState.answers}
           onRestart={resetQuiz}
           onBackToHome={onBackToHome}
+          targetWords={targetWords}
+          setTargetWords={setTargetWords}
         />
       </div>
     );

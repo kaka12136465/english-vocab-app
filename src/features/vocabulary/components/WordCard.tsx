@@ -22,7 +22,7 @@ export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord, setShowA
           <button
             className="text-sm mt-1 text-primary-600 hover:text-primary-700 font-medium"
           >
-            {showDetails ? '閉じる' : '詳細　'}
+            {showDetails ? '閉じる' : '詳細'}
           </button>
         </div>
       </div>

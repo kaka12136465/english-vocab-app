@@ -1,12 +1,15 @@
 import React from 'react';
 import { QuizAnswer } from '../types/quiz.types';
 import { QuizSummary } from '../services/quizService';
+import { Word } from '@/types';
 
 interface QuizResultProps {
   summary: QuizSummary;
   answers: QuizAnswer[];
-  onRestart: () => void;
+  onRestart: (words: Word[]) => void;
   onBackToHome: () => void;
+  targetWords: Word[];
+  setTargetWords: (words: Word[]) => void;
 }
 
 export const QuizResult: React.FC<QuizResultProps> = ({
@@ -14,6 +17,8 @@ export const QuizResult: React.FC<QuizResultProps> = ({
   answers,
   onRestart,
   onBackToHome,
+  targetWords,
+  setTargetWords,
 }) => {
   const getAccuracyColor = (accuracy: number): string => {
     if (accuracy >= 80) return 'text-green-600';
@@ -93,7 +98,7 @@ export const QuizResult: React.FC<QuizResultProps> = ({
                 あなたの回答: <span className="font-medium">{answer.userAnswer}</span>
               </p>
               <p className="text-sm text-gray-700">
-                正解: <span className="font-medium">{answer.correctAnswers.join(', ')}</span>
+                正解: <span className="font-medium">{answer.word.japanese.join(', ')}</span>
               </p>
             </div>
           ))}
@@ -103,11 +108,23 @@ export const QuizResult: React.FC<QuizResultProps> = ({
       {/* アクションボタン */}
       <div className="flex flex-col sm:flex-row gap-3">
         <button
-          onClick={onRestart}
+          onClick={() => onRestart(targetWords)}
           className="flex-1 py-3 px-4 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
           autoFocus
         >
           もう一度挑戦
+        </button>
+        <button
+          onClick={async () =>{
+            const wrongWords = answers
+              .filter(answer => !answer.isCorrect)
+              .map(answer => answer.word);
+            await setTargetWords(wrongWords);
+            await onRestart(wrongWords);
+          }}
+          className="flex-1 py-3 px-4 bg-red-500 text-white font-medium rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
+        >
+          復習する
         </button>
         <button
           onClick={onBackToHome}

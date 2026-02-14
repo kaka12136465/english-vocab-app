@@ -21,7 +21,7 @@ export interface QuizAnswer {
   questionIndex: number;
   userAnswer: string;
   isCorrect: boolean;
-  correctAnswers: string[];
+  word: Word;
 }
 
 // クイズのステート

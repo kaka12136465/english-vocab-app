@@ -14,7 +14,7 @@ interface useQuizProps {
   wordCount: number; // 出題数
   quizRange?: [number, number]; // 出題範囲(指定しないなら全範囲)
   quizState: QuizState;
-  setWords: (words: Word[]) => void;
+  setTargetWords: (words: Word[]) => void;
   setMode: (mode: QuizMode) => void;
   setWordCount: (wordCount: number) => void;
   setQuizState: (quizState: QuizState) => void;
@@ -25,7 +25,7 @@ interface useQuizReturnProps{
   initializeQuiz: () => Promise<void>;
   submitAnswer:(userAnswer: string) => Promise<boolean>;
   nextQuestion:() => Promise<void>;
-  resetQuiz: () => void;
+  resetQuiz: (words: Word[]) => void;
   playQuestionAudio:() => void;
   getQuizSummary: () => quizService.QuizSummary;
   checkUserAnswer: () => Promise<boolean>;
@@ -35,28 +35,21 @@ interface useQuizReturnProps{
 /**
  * クイズ機能を管理するカスタムフック
  */
-export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wordBookId, words, mode, wordCount, quizRange, quizState, setWords, setMode, setWordCount, setQuizState}) => {
+export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wordBookId, words, mode, wordCount, quizRange, quizState, setTargetWords, setMode, setWordCount, setQuizState}) => {
   setMode;
   setWordCount;
   /**
    * クイズをリセット
+   * 与えられた単語リストからwordCount分の単語をランダムに選び、クイズを初期化する
    */
-  const resetQuiz = useCallback(() => {
+  const resetQuiz = useCallback((words: Word[]) => {
     if(!mode){
       console.error("クイズのモードが選択されていません");
       return;
     }
-    const range = quizRange || [0, words.length];
-    const rangeWords = words.filter((word) => {
-      return word.index >= range[0] && word.index < range[1];
-    });
-    if(rangeWords.length === 0){
-      console.error("指定された範囲に単語が存在しません");
-      throw new Error("指定された範囲に単語が存在しません");
-    }
 
     // ランダムにシャッフル
-    const shuffled = [...rangeWords].sort(() => 0.5 - Math.random());
+    const shuffled = [...words].sort(() => 0.5 - Math.random());
     const selectedWords = shuffled.slice(0, Math.min(wordCount, shuffled.length));
     const questions = selectedWords.map(word => 
       quizService.generateQuestion(word, mode)
@@ -74,43 +67,29 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
   }, [mode, wordCount, words]);
 
   /**
-   * クイズを開始
+   * クイズを初期化する
+   * 指定の単語帳から全単語を取得し、そこからquizRangeに基づいて単語を抽出する
    */
   const initializeQuiz = useCallback(async () => {
-    const words = await getWordsInWordBook(wordBookId);
-    await setWords(words);
-    
     if(!mode){
       console.error("クイズのモードが選択されていません");
       return;
     }
 
+    const words = await getWordsInWordBook(wordBookId);
     const range = quizRange || [0, words.length];
     const rangeWords = words.filter((word) => {
       return word.index >= range[0] && word.index < range[1];
     });
+    
     if(rangeWords.length === 0){
       console.error("指定された範囲に単語が存在しません");
       alert("指定された範囲に単語が存在しません");
       throw new Error("指定された範囲に単語が存在しません");
     }
 
-    // ランダムにシャッフル
-    const shuffled = [...rangeWords].sort(() => 0.5 - Math.random());
-    const selectedWords = shuffled.slice(0, Math.min(wordCount, shuffled.length));
-    const questions = selectedWords.map(word => 
-      quizService.generateQuestion(word, mode)
-    );
-
-    const newQuizState: QuizState = {
-      config: { mode, wordCount },
-      questions: questions,
-      currentQuestionIndex: 0,
-      answers: [],
-      isComplete: false,
-    };
-
-    setQuizState(newQuizState);
+    await setTargetWords(rangeWords);
+    await resetQuiz(rangeWords);
   }, [mode, wordCount]);
 
   
@@ -131,7 +110,7 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
       questionIndex: quizState.currentQuestionIndex,
       userAnswer,
       isCorrect,
-      correctAnswers: currentQuestion.correctAnswers,
+      word: currentQuestion.word,
     };
 
     setQuizState({
