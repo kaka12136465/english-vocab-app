@@ -229,6 +229,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
     const addingWords: string[] = addingWordsForm.split(/\r?\n/).map(w => w.trim()).filter(w => w.length > 0);
     if(addingWords.length === 0){
       setError("追加する単語がありません");
+      setLoading(false);
       return;
     }
     try{
@@ -240,9 +241,10 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
         if(!scrapedData.isFound){
           setError("英単語が見つかりません: " + word);
           setIsSearchLoading(false);
+          setLoading(false);
           return;
         }
-        const translateResponse:string = "テスト"//await translateEnToJp(word);
+        const translateResponse:string = await translateEnToJp(word);
         console.log("translate result", translateResponse);
         const newFormData: AddWordFormData = {
           english: word,
@@ -314,19 +316,20 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
       {/* 一気に単語を追加フォーム */}
       <div className="flex flex-col"> 
         <textarea
+          disabled={loading}
           value={addingWordsForm}
           className="[field-sizing:content] flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mb-3"
           onChange={(e) => setAddingWordsForm(e.target.value)}
           placeholder="まとめて単語を追加したい場合は、ここに単語を改行区切りで入力してください。"
         /> 
-        <button
+        {loading ? <span className="text-sm text-gray-500">追加中...</span> : <button
           onClick={async () => {
             await handleAddmultipleWords();
           }}
           className="mb-2 w-fit px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           まとめて追加
-        </button>
+        </button>}
       </div>
 
       <div className="space-y-6">
