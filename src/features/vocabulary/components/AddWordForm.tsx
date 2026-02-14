@@ -29,6 +29,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
   const [addingWordsForm, setAddingWordsForm] = useState<string>("");
   const [addingWordsLastIndex, setAddingWordsLastIndex] = useState<number>(wordsNum);
   const [addingWords, setAddingWords] = useState<string[]>([]);
+  const [isSingleAddition, setIsSingleAddition] = useState<boolean>(true);
 
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const addButtonRef = useRef<HTMLButtonElement>(null);
@@ -314,276 +315,295 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
           ファイルから追加
         </button>
       </div>}
-      {/* 一気に単語を追加フォーム */}
-      <div className="flex flex-col">
-        {addingWords.map((word, index) => (
-          <div className="flex justify-between items-center gap-2 mb-1" key={index}>
-            <div className="flex flex-1 px-3 py-2 w-full border border-gray-300 rounded-md items-center gap-2 mb-1">
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={addingWordsLastIndex+index}
-                className="[field-sizing:content] focus:outline-none underline"
-                onChange={(e) => setAddingWordsLastIndex(Number(e.target.value)-index)}
-              />
-              ：
-              <span className="font-bold">{word}</span>
+      <button 
+        onClick={(e) => {e.preventDefault(); setIsSingleAddition(true);}}
+        className={!isSingleAddition ? "px-4 pt-2 pb-2 bg-gray-100 text-gray-700 border border-gray-100 hover:bg-gray-200" 
+        : "px-4 pt-2 pb-2 bg-white hover:bg-gray-100"}>
+          1つずつ単語を追加
+      </button>
+      <button 
+        onClick={(e) => {e.preventDefault(); setIsSingleAddition(false);}}
+        className={isSingleAddition ? "px-4 pt-2 pb-2 bg-gray-100 text-gray-700 border border-gray-100 hover:bg-gray-200" 
+        : "px-4 pt-2 pb-2 bg-white hover:bg-gray-100"}>
+          まとめて単語を追加
+      </button>
+
+      {!isSingleAddition ? (
+        <div className="flex bg-white px-4 flex-col">
+          {error && (
+            <div className="p-3 mt-4 mb-3 text-sm text-red-700 bg-red-100 rounded-md">
+              {error}
             </div>
-            <button
-                onClick={() => {setAddingWords(prev => prev.filter((_, i) => i !== index));}}
-                className="shrink-0 px-3 py-1 text-red-600 hover:bg-red-700 rounded-md font-bold border border-red-600 bg-red-600 text-white"
-            >削除</button>
-          </div>
-        ))}
-        <input
-          disabled={loading}
-          value={addingWordsForm}
-          type="text"
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mb-3"
-          onChange={(e) => setAddingWordsForm(e.target.value)}
-          placeholder="まとめて単語を追加したい場合は、ここに単語を改行区切りで入力してください。"
-          onKeyDown={(e) => {
-            if(e.key === "Enter"){
-              e.preventDefault();
-              setAddingWords(prev => [...prev, addingWordsForm]);
-              setAddingWordsForm("");
-            }
-          }}
-        /> 
-        {loading ? <span className="text-sm text-gray-500">追加中...</span> : <button
-          onClick={async () => {
-            await handleAddmultipleWords();
-          }}
-          className="mb-2 w-fit px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          まとめて追加
-        </button>}
-      </div>
-
-      <div className="space-y-6">
-        {error && (
-          <div className="p-3 text-sm text-red-700 bg-red-100 rounded-md">
-            {error}
-          </div>
-        )}
-
-        {/* 英単語 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            英単語 <span className="text-red-500">*</span>
-          </label>
+          )}
+          {addingWords.map((word, index) => (
+            <div className="flex justify-between items-center gap-2 mb-1" key={index}>
+              <div className="flex flex-1 mt-3 px-3 py-2 w-full border border-gray-300 rounded-md items-center gap-2 mb-1">
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  value={addingWordsLastIndex+index}
+                  className="[field-sizing:content] focus:outline-none underline"
+                  onChange={(e) => setAddingWordsLastIndex(Number(e.target.value)-index)}
+                />
+                ：
+                <span className="font-bold">{word}</span>
+              </div>
+              <button
+                  onClick={(e) => {e.preventDefault(); setAddingWords(prev => prev.filter((_, i) => i !== index));}}
+                  className="shrink-0 px-3 py-1 text-red-600 hover:bg-red-700 rounded-md font-bold border border-red-600 bg-red-600 text-white"
+              >削除</button>
+            </div>
+          ))}
           <input
+            disabled={loading}
+            value={addingWordsForm}
             type="text"
-            value={formData.english}
-            onChange={(e) => {setFormData(prev => ({ ...prev, english: e.target.value })); setIsSearchLoading(false);}}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            autoFocus
-            placeholder="例: apple"
-            required
-            ref={inputEnRef}
+            className="flex-1 mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mb-3"
+            onChange={(e) => setAddingWordsForm(e.target.value)}
+            placeholder="まとめて単語を追加したい場合は、ここに単語を改行区切りで入力してください。"
             onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                if(isSearched) setIsSearched(false);
+              if(e.key === "Enter"){
                 e.preventDefault();
-                setTimeout(()=>{
-                  searchButtonRef.current?.focus();
-                }, 1);
+                setAddingWords(prev => [...prev, addingWordsForm]);
+                setAddingWordsForm("");
               }
             }}
-          />
+          /> 
+          {loading ? <span className="text-sm text-gray-500">追加中...</span> : <button
+            onClick={async () => {
+              await handleAddmultipleWords();
+            }}
+            className="mb-2 w-fit px-4 py-2 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            まとめて追加
+          </button>}
         </div>
-        
-        <div className='flex flex-row justify-start items-center gap-x-3'>
-          {isSearched ? 
-            <button
-              type="submit"
-              disabled={loading}
-              className="mr-4 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              ref={addButtonRef}
-            >
-              {loading ? '追加中...' : '追加'}
-            </button> :
-            <button
-              type='button' 
-              onClick={handleSearch}
-              disabled={isSearchLoading}
-              ref={searchButtonRef}
-              onKeyDown={async (e) => {
+      ) : (
+        <div className="flex flex-col space-y-6 bg-white px-4">
+          {error && (
+            <div className="p-3 mt-4 text-sm text-red-700 bg-red-100 rounded-md">
+              {error}
+            </div>
+          )}
+
+          {/* 英単語 */}
+          <div>
+            <label className="block mt-4 text-sm font-medium text-gray-700 mb-2">
+              英単語 <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.english}
+              onChange={(e) => {setFormData(prev => ({ ...prev, english: e.target.value })); setIsSearchLoading(false);}}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              autoFocus
+              placeholder="例: apple"
+              required
+              ref={inputEnRef}
+              onKeyDown={(e) => {
                 if (e.key === 'Enter') {
+                  if(isSearched) setIsSearched(false);
                   e.preventDefault();
-                  await handleSearch();
-                  setTimeout(() => {
-                    addButtonRef.current?.focus();
+                  setTimeout(()=>{
+                    searchButtonRef.current?.focus();
                   }, 1);
                 }
               }}
-              className='mr-4 py-2 px-4 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
-            >
-              {isSearchLoading ? "待機中..." : "検索"}
-            </button> 
-          }
-          <div className="flex flex-none w-fit px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500">
-            <p className='text-center'>番号：</p>
-            <input
-              type="number"
-              value={formData.index > 0 ? formData.index : ""}
-              onChange={(e) => setFormData(prev => ({ ...prev, index: Number(e.target.value) }))}
-              className='focus:outline-none w-16'
-              required
             />
           </div>
-        </div>
-
-        {/* 日本語訳 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            日本語訳 <span className="text-red-500">*</span>
-          </label>
-          {formData.japanese.map((jp, index) => (
-            <div key={index} className="flex gap-2 mb-2">
+          
+          <div className='flex flex-row justify-start items-center gap-x-3'>
+            {isSearched ? 
+              <button
+                type="submit"
+                disabled={loading}
+                className="mr-4 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                ref={addButtonRef}
+              >
+                {loading ? '追加中...' : '追加'}
+              </button> :
+              <button
+                type='button' 
+                onClick={handleSearch}
+                disabled={isSearchLoading}
+                ref={searchButtonRef}
+                onKeyDown={async (e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    await handleSearch();
+                    setTimeout(() => {
+                      addButtonRef.current?.focus();
+                    }, 1);
+                  }
+                }}
+                className='mr-4 py-2 px-4 bg-green-600 text-white font-medium rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+              >
+                {isSearchLoading ? "待機中..." : "検索"}
+              </button> 
+            }
+            <div className="flex flex-none w-fit px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary-500">
+              <p className='text-center'>番号：</p>
               <input
-                type="text"
-                value={jp}
-                onChange={(e) => updateJapanese(index, e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-                placeholder="例: りんご"
-                required={index === 0}
+                type="number"
+                value={formData.index > 0 ? formData.index : ""}
+                onChange={(e) => setFormData(prev => ({ ...prev, index: Number(e.target.value) }))}
+                className='focus:outline-none w-16'
+                required
               />
-              {formData.japanese.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeJapaneseField(index)}
-                  className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
-                >
-                  削除
-                </button>
-              )}
             </div>
-          ))}
-          <button
-            type="button"
-            onClick={addJapaneseField}
-            className="text-sm text-primary-600 hover:text-primary-700"
-          >
-            + 日本語訳を追加
-          </button>
-        </div>
+          </div>
 
-        {/* 発音記号 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            発音記号
-          </label>
-          <input
-            type="text"
-            value={formData.pronunciation}
-            onChange={(e) => setFormData(prev => ({ ...prev, pronunciation: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="例: ˈæp.əl"
-          />
-        </div>
+          {/* 日本語訳 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              日本語訳 <span className="text-red-500">*</span>
+            </label>
+            {formData.japanese.map((jp, index) => (
+              <div key={index} className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={jp}
+                  onChange={(e) => updateJapanese(index, e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="例: りんご"
+                  required={index === 0}
+                />
+                {formData.japanese.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeJapaneseField(index)}
+                    className="px-3 py-2 text-red-600 hover:bg-red-50 rounded-md"
+                  >
+                    削除
+                  </button>
+                )}
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addJapaneseField}
+              className="text-sm text-primary-600 hover:text-primary-700"
+            >
+              + 日本語訳を追加
+            </button>
+          </div>
 
-        {/* 類義語 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            類義語（任意）
-          </label>
-          {formData.synonyms.map((syn, index) => (
+          {/* 発音記号 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              発音記号
+            </label>
             <input
-              key={index}
               type="text"
-              value={syn}
-              onChange={(e) => {
-                const newSynonyms = [...formData.synonyms];
-                newSynonyms[index] = e.target.value;
-                setFormData(prev => ({ ...prev, synonyms: newSynonyms }));
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mb-2"
-              placeholder="例: fruit"
+              value={formData.pronunciation}
+              onChange={(e) => setFormData(prev => ({ ...prev, pronunciation: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="例: ˈæp.əl"
             />
-          ))}
-          <button
-            type="button"
-            onClick={addSynonym}
-            className="text-sm text-primary-600 hover:text-primary-700"
-          >
-            + 類義語を追加
-          </button>
-        </div>
+          </div>
 
-        {/* 対義語 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            対義語（任意）
-          </label>
-          {formData.antonyms.map((ant, index) => (
-            <input
-              key={index}
-              type="text"
-              value={ant}
-              onChange={(e) => {
-                const newAntonyms = [...formData.antonyms];
-                newAntonyms[index] = e.target.value;
-                setFormData(prev => ({ ...prev, antonyms: newAntonyms }));
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mb-2"
-              placeholder="例: vegetable"
+          {/* 類義語 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              類義語（任意）
+            </label>
+            {formData.synonyms.map((syn, index) => (
+              <input
+                key={index}
+                type="text"
+                value={syn}
+                onChange={(e) => {
+                  const newSynonyms = [...formData.synonyms];
+                  newSynonyms[index] = e.target.value;
+                  setFormData(prev => ({ ...prev, synonyms: newSynonyms }));
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mb-2"
+                placeholder="例: fruit"
+              />
+            ))}
+            <button
+              type="button"
+              onClick={addSynonym}
+              className="text-sm text-primary-600 hover:text-primary-700"
+            >
+              + 類義語を追加
+            </button>
+          </div>
+
+          {/* 対義語 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              対義語（任意）
+            </label>
+            {formData.antonyms.map((ant, index) => (
+              <input
+                key={index}
+                type="text"
+                value={ant}
+                onChange={(e) => {
+                  const newAntonyms = [...formData.antonyms];
+                  newAntonyms[index] = e.target.value;
+                  setFormData(prev => ({ ...prev, antonyms: newAntonyms }));
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mb-2"
+                placeholder="例: vegetable"
+              />
+            ))}
+            <button
+              type="button"
+              onClick={addAntonym}
+              className="text-sm text-primary-600 hover:text-primary-700"
+            >
+              + 対義語を追加
+            </button>
+          </div>
+
+          {/* 例文 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              例文（任意）
+            </label>
+            <textarea
+              value={formData.exampleSentence}
+              onChange={(e) => setFormData(prev => ({ ...prev, exampleSentence: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="例: I eat an apple every day."
+              rows={3}
             />
-          ))}
-          <button
-            type="button"
-            onClick={addAntonym}
-            className="text-sm text-primary-600 hover:text-primary-700"
-          >
-            + 対義語を追加
-          </button>
-        </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              説明文（任意）
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="例: 「瞳のリンゴ」=「目に入れても痛くないほど可愛い存在」という意味のイディオム「The apple of one's eye」としても使われます"
+              rows={3}
+            />
+          </div>
 
-        {/* 例文 */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            例文（任意）
-          </label>
-          <textarea
-            value={formData.exampleSentence}
-            onChange={(e) => setFormData(prev => ({ ...prev, exampleSentence: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="例: I eat an apple every day."
-            rows={3}
-          />
+          {/* ボタン */}
+          <div className="flex gap-3">
+            <button
+              type="submit"
+              disabled={loading}
+              className="flex-1 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {loading ? '追加中...' : '追加 (Ctrl + ; )'}
+            </button>
+            <button
+              type="button"
+              onClick={onCancel}
+              className="flex-1 py-2 px-4 bg-gray-200 text-gray-700 font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
+            >
+              キャンセル
+            </button>
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            説明文（任意）
-          </label>
-          <textarea
-            value={formData.description}
-            onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
-            placeholder="例: 「瞳のリンゴ」=「目に入れても痛くないほど可愛い存在」という意味のイディオム「The apple of one's eye」としても使われます"
-            rows={3}
-          />
-        </div>
-
-        {/* ボタン */}
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? '追加中...' : '追加 (Ctrl + ; )'}
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="flex-1 py-2 px-4 bg-gray-200 text-gray-700 font-medium rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
-          >
-            キャンセル
-          </button>
-        </div>
-      </div>
+      )}
     </form>
   );
 };
