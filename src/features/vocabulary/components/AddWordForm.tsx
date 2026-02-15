@@ -276,7 +276,6 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
 
   const addWord = async (word: string, index: number) => {
     setLoading(true);
-    console.log(index+word);
     try{
       console.log("searching", word);
       const scrapedData = await scrapeWord(word);
@@ -304,7 +303,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
         throw new Error("データベースへ単語を追加できませんでした" + newFormData);
       }
       setAddingWords(prev => prev.slice(1));
-      setWordsCnt(prev => prev + 1);
+      setAddingWordsIndexes(prev => prev.slice(1));
       setError("");
     }catch(err){
       console.error("単語追加に失敗しました");
@@ -385,7 +384,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
                   pattern="[0-9]*"
                   value={addingWordsIndexes[index] || wordsNum + 1 + index}
                   className="[field-sizing:content] focus:outline-none underline"
-                  onChange={(e) => {setAddingWordsIndexes(prev => prev.map((v, i) => i === index ? Number(e.target.value) : v))}}
+                  onChange={(e) => {e.preventDefault(); setAddingWordsIndexes(prev => prev.map((i, j) => j === index ? Number(e.target.value) : i))}}
                 />
                 ：
                 <input
@@ -397,13 +396,17 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
                 />
               </div>
               <button
-                  onClick={(e) => {e.preventDefault(); setAddingWords(prev => prev.filter((_, i) => i !== index));}}
+                  onClick={(e) => {
+                    e.preventDefault(); 
+                    setAddingWords(prev => prev.filter((_, i) => i !== index));
+                    setWordsCnt(prev => prev - 1);
+                    setAddingWordsIndexes(prev => prev.map((v, i) => i > index ? v-1 : v).filter((_, i) => i !== index));
+                  }}
                   className="shrink-0 px-3 py-1 text-red-600 hover:bg-red-700 rounded-md font-bold border border-red-600 bg-red-600 text-white"
               >削除</button>
             </div>
           ))}
           <input
-            disabled={loading}
             value={addingWordsForm}
             type="text"
             className="flex-1 mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 mb-3"
@@ -413,12 +416,13 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
               if(e.key === "Enter"){
                 e.preventDefault();
                 setAddingWords(prev => [...prev, addingWordsForm]);
-                setAddingWordsIndexes(prev => [...prev, wordsNum + 1 + prev.length]);
-                console.log(addingWords.length-1);
+                setAddingWordsIndexes(prev => [...prev, wordsCnt + 1]);
+                setWordsCnt(prev => prev + 1);
                 setAddingWordsForm("");
                 if(isParallelAddition){
-                  addWord(addingWordsForm, addingWordsIndexes[addingWords.length]);
+                  addWord(addingWordsForm, wordsCnt + 1);
                 }
+                e.currentTarget.focus();
               }
             }}
           />
