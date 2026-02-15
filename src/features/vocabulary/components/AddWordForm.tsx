@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AddWordFormData } from '../types/vocabulary.types';
-import { scrapeWord, translateEnToJp } from '../services/wordSearchingService';
+import { scrapeWord, translateEnToJp, translateEnToJpIfNotFound } from '../services/wordSearchingService';
 
 interface AddWordFormProps {
   onSubmit: (formData: AddWordFormData) => Promise<boolean>; // handleAddWord関数を受け取る
@@ -128,39 +128,50 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
 
   // formData.englishの類義語、対義語、例文をスクレイピングし、
   const handleSearch = async () => {
-    
     if(formData.english.length === 0){
       setError("英単語は必須です");
       return;
     }
-
     setIsSearchLoading(true);
-
     try{
-      console.log("searching", formData.english);
-      const word = await scrapeWord(formData.english);
-      console.log("scraping result", word);
-      const translateResponse:string = await translateEnToJp(formData.english);
-      console.log("translate result", translateResponse);
+      console.log('searching "' + formData.english + '"');
+      const scrapedData = await scrapeWord(formData.english);
+      let newFormData: AddWordFormData;
       const index = wordsCnt + 1;
-
-      if(!word.isFound){
-        setError("英単語が見つかりません");
-        setIsSearchLoading(false);
-        return;
+      if(scrapedData.isFound){
+        const japaneses:string = await translateEnToJp(formData.english);
+        newFormData = {
+          english: scrapedData.english,
+          japanese: japaneses.split(/[,、\n]/),
+          antonyms: Array.from(scrapedData.antonyms),
+          synonyms: Array.from(scrapedData.synonyms),
+          exampleSentence: scrapedData.exampleSentence,
+          pronunciation: scrapedData.pronunciation,
+          index: index,
+          description: '',
+        }
+      }else{
+        const translateResponse:string = await translateEnToJpIfNotFound(formData.english);
+        const translateResponseMatch = translateResponse.match(/\{([^}]+)\}/);
+        if(!translateResponseMatch){
+          setError("AIから不適切なレスポンスを受け取りました");
+          setIsSearchLoading(false);
+          return;
+        }
+        const translateResult = JSON.parse("{" + translateResponseMatch[1] + "}");
+        newFormData = {
+          english: formData.english,
+          japanese: translateResult.japanese,
+          antonyms: translateResult.antonyms,
+          synonyms: translateResult.synonyms,
+          exampleSentence: translateResult.exampleSentence,
+          pronunciation: translateResult.pronunciation,
+          index: index,
+          description: '',
+        }
       }
-      const newFormData: AddWordFormData = {
-        english: word.english,
-        japanese: translateResponse.split(/[,、\n]/),
-        antonyms: Array.from(word.antonyms),
-        synonyms: Array.from(word.synonyms),
-        exampleSentence: word.exampleSentence,
-        pronunciation: word.pronunciation,
-        index: index,
-        description: '',
-      }
+      console.log("result", newFormData);
       setFormData(newFormData);
-      console.log("search result", newFormData);
     }catch(err){
       console.error("検索に失敗しました");
       throw new Error();

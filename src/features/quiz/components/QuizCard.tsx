@@ -78,10 +78,16 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   const handleAiCheck = async () => {
     setLoading(true);
     if(isCorrect || isCheckButtonClicked) return;
-    const correct = await onCheckAnswer();
-    setIsCorrect(correct);
-    setIsCheckButtonClicked(true);
-    setLoading(false);
+    try{
+      const correct = await onCheckAnswer();
+      setIsCorrect(correct);
+    }catch(err){
+      console.error('Error checking answer:', err);
+      alert('AIチェック中にエラーが発生しました');
+    }finally{
+      setIsCheckButtonClicked(true);
+      setLoading(false);
+    }
   }
 
   const handleAddJp = async () => {

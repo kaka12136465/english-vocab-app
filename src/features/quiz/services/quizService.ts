@@ -54,6 +54,9 @@ export const checkAnswer = (
  */
 export const checkCorrectTranslation = async (english: string, japanese: string) => {
   try{
+    if(english.length > 100){
+      throw new Error("英単語の入力が長すぎます。100文字以下にしてください。");
+    }
     const prompt = english + "の和訳として「"+japanese+"」は正しい？\n条件：\n1. 意味が一致していること\n2. 品詞が一致していること（形容詞→形容詞的訳、名詞→名詞的訳、副詞→副詞的訳など）\ntrue,falseのみ出力";
 
     const response = await requestGemini(prompt);
