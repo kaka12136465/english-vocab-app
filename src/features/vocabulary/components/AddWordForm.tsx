@@ -171,7 +171,6 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
           index: index,
           description: '',
         }
-        console.log("not found", word, newFormData);
       }
       console.log("result", newFormData);
       return newFormData;
