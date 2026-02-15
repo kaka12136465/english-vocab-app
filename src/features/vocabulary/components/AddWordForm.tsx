@@ -127,19 +127,19 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
   };
 
   // formData.englishの類義語、対義語、例文をスクレイピングし、
-  const handleSearch = async () => {
-    if(formData.english.length === 0){
+  const handleSearch: (word: string) => Promise<AddWordFormData | null> = async (word: string) => {
+    if(word.length === 0){
       setError("英単語は必須です");
-      return;
+      return null;
     }
     setIsSearchLoading(true);
     try{
-      console.log('searching "' + formData.english + '"');
-      const scrapedData = await scrapeWord(formData.english);
+      console.log('searching "' + word + '"');
+      const scrapedData = await scrapeWord(word);
       let newFormData: AddWordFormData;
       const index = wordsCnt + 1;
       if(scrapedData.isFound){
-        const japaneses:string = await translateEnToJp(formData.english);
+        const japaneses:string = await translateEnToJp(word);
         newFormData = {
           english: scrapedData.english,
           japanese: japaneses.split(/[,、\n]/),
@@ -151,27 +151,30 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
           description: '',
         }
       }else{
-        const translateResponse:string = await translateEnToJpIfNotFound(formData.english);
+        
+        const translateResponse:string = await translateEnToJpIfNotFound(word);
+        console.log("translate response", translateResponse);
         const translateResponseMatch = translateResponse.match(/\{([^}]+)\}/);
         if(!translateResponseMatch){
           setError("AIから不適切なレスポンスを受け取りました");
           setIsSearchLoading(false);
-          return;
+          return null;
         }
         const translateResult = JSON.parse("{" + translateResponseMatch[1] + "}");
         newFormData = {
-          english: formData.english,
-          japanese: translateResult.japanese,
-          antonyms: translateResult.antonyms,
-          synonyms: translateResult.synonyms,
-          exampleSentence: translateResult.exampleSentence,
-          pronunciation: translateResult.pronunciation,
+          english: word,
+          japanese: translateResult.japanese?? [],
+          antonyms: translateResult.antonyms?? [],
+          synonyms: translateResult.synonyms?? [],
+          exampleSentence: translateResult.exampleSentence?? "",
+          pronunciation: translateResult.pronunciation?? "",
           index: index,
           description: '',
         }
+        console.log("not found", word, newFormData);
       }
       console.log("result", newFormData);
-      setFormData(newFormData);
+      return newFormData;
     }catch(err){
       console.error("検索に失敗しました");
       throw new Error();
@@ -250,27 +253,13 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
     }
     try{
       for(let i = 0; addingWordsCopy.length != 0; i++){
-        console.log("チェック", addingWords);
+        console.log("adding word: " + addingWordsCopy);
         const [word, index] = addingWordsCopy[0];
-        const scrapedData = await scrapeWord(word);
-        if(!scrapedData.isFound){
-          setError("英単語が見つかりません: " + word);
-          setIsSearchLoading(false);
-          setLoading(false);
-          return;
+        const newFormData = await handleSearch(word);
+        if(!newFormData){
+          throw new Error("単語の検索に失敗しました: " + word);
         }
-        const translateResponse:string = "てすと"//await translateEnToJp(word);
-        const newFormData: AddWordFormData = {
-          english: word,
-          japanese: translateResponse.split(/[,、\n]/),
-          antonyms: Array.from(scrapedData.antonyms),
-          synonyms: Array.from(scrapedData.synonyms),
-          exampleSentence: scrapedData.exampleSentence,
-          pronunciation: scrapedData.pronunciation,
-          index: index,
-          description: '',
-        }
-        const success = await onSubmit(newFormData);
+        const success = await onSubmit({...newFormData, index: index});
         if(!success){
           throw new Error("データベースへ単語を追加できませんでした" + newFormData);
         }
@@ -292,25 +281,11 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
     setLoading(true);
     const [word, index] = wordData;
     try{
-      const scrapedData = await scrapeWord(word);
-      if(!scrapedData.isFound){
-        setError("英単語が見つかりません: " + word);
-        setIsSearchLoading(false);
-        setLoading(false);
-        return;
+      const newFormData = await handleSearch(word);
+      if(!newFormData){
+        throw new Error("単語の検索に失敗しました: " + word);
       }
-      const translateResponse:string = "test"//await translateEnToJp(word);
-      const newFormData: AddWordFormData = {
-        english: word,
-        japanese: translateResponse.split(/[,、\n]/),
-        antonyms: Array.from(scrapedData.antonyms),
-        synonyms: Array.from(scrapedData.synonyms),
-        exampleSentence: scrapedData.exampleSentence,
-        pronunciation: scrapedData.pronunciation,
-        index: index,
-        description: '',
-      }
-      const success = await onSubmit(newFormData);
+      const success = await onSubmit({...newFormData, index: index});
       if(!success){
         throw new Error("データベースへ単語を追加できませんでした" + newFormData);
       }
@@ -513,13 +488,23 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
               </button> :
               <button
                 type='button' 
-                onClick={handleSearch}
+                onClick={async () => {
+                  const result = await handleSearch(formData.english);
+                  console.log(result);
+                  if (result) {
+                    setFormData(result);
+                  }
+                }}
                 disabled={isSearchLoading}
                 ref={searchButtonRef}
                 onKeyDown={async (e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    await handleSearch();
+                    const result = await handleSearch(formData.english);
+                    console.log(result);
+                    if (result) {
+                      setFormData(result);
+                    }
                     setTimeout(() => {
                       addButtonRef.current?.focus();
                     }, 1);

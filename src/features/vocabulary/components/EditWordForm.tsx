@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { AddWordFormData, EditWordFormData } from '../types/vocabulary.types';
-import { scrapeWord, translateEnToJp } from '../services/wordSearchingService';
+import { scrapeWord, translateEnToJp, translateEnToJpIfNotFound } from '../services/wordSearchingService';
 import { Word } from '@/types';
 
 interface EditWordFormProps {
@@ -107,34 +107,56 @@ export const EditWordForm: React.FC<EditWordFormProps> = ({ onSubmit, onCancel, 
   };
 
   // formData.englishの類義語、対義語、例文をスクレイピングし、
-  const handleSearch = async () => {
-    if(formData.english.length === 0){
-      setError("英単語は必須です");
-      return;
+  const handleSearch: (word: string) => Promise<AddWordFormData | null> = async (word: string) => {
+      if(word.length === 0){
+        setError("英単語は必須です");
+        return null;
+      }
+      try{
+        console.log('searching "' + word + '"');
+        const scrapedData = await scrapeWord(word);
+        let newFormData: AddWordFormData;
+        if(scrapedData.isFound){
+          const japaneses:string = await translateEnToJp(word);
+          newFormData = {
+            english: scrapedData.english,
+            japanese: japaneses.split(/[,、\n]/),
+            antonyms: Array.from(scrapedData.antonyms),
+            synonyms: Array.from(scrapedData.synonyms),
+            exampleSentence: scrapedData.exampleSentence,
+            pronunciation: scrapedData.pronunciation,
+            index: formData.index,
+            description: '',
+          }
+        }else{
+          
+          const translateResponse:string = await translateEnToJpIfNotFound(word);
+          console.log("translate response", translateResponse);
+          const translateResponseMatch = translateResponse.match(/\{([^}]+)\}/);
+          if(!translateResponseMatch){
+            setError("AIから不適切なレスポンスを受け取りました");
+            return null;
+          }
+          const translateResult = JSON.parse("{" + translateResponseMatch[1] + "}");
+          newFormData = {
+            english: word,
+            japanese: translateResult.japanese?? [],
+            antonyms: translateResult.antonyms?? [],
+            synonyms: translateResult.synonyms?? [],
+            exampleSentence: translateResult.exampleSentence?? "",
+            pronunciation: translateResult.pronunciation?? "",
+            index: formData.index,
+            description: '',
+          }
+          console.log("not found", word, newFormData);
+        }
+        console.log("result", newFormData);
+        return newFormData;
+      }catch(err){
+        console.error("検索に失敗しました");
+        throw new Error();
+      }
     }
-    console.log("searching", formData.english);
-    const word = await scrapeWord(formData.english);
-    console.log("scraping result", word);
-    const translateResponse:string = await translateEnToJp(formData.english);
-    console.log("translate result", translateResponse);
-
-    if(!word.isFound){
-      setError("英単語が見つかりません");
-      return;
-    }
-    const newFormData: AddWordFormData = {
-      english: word.english,
-      japanese: translateResponse.split(/[,、\n]/),
-      antonyms: Array.from(word.antonyms),
-      synonyms: Array.from(word.synonyms),
-      exampleSentence: word.exampleSentence,
-      pronunciation: word.pronunciation,
-      index: formData.index,
-      description: formData.description,
-    }
-    setFormData(newFormData);
-    console.log("search result", newFormData);
-  }
 
   return (
     <form onSubmit={(e) => {e.preventDefault();handleSubmit()}} className="bg-white rounded-lg shadow-md p-6">
@@ -186,7 +208,12 @@ export const EditWordForm: React.FC<EditWordFormProps> = ({ onSubmit, onCancel, 
           {/* スクレイピングボタン */}
           <button
             type='button' 
-            onClick={handleSearch}
+            onClick={async () => {
+              const newFormData = await handleSearch(formData.english);
+              if(newFormData){
+                setFormData(newFormData);
+              }
+            }}
             className='mr-4 py-2 px-4 bg-primary-600 text-white font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
           >
             検索

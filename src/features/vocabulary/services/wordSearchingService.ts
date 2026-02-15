@@ -100,7 +100,7 @@ export const translateEnToJpIfNotFound = async (idiom: string): Promise<string> 
     if(idiom.length > 100){
       throw new Error("入力が長すぎます。100文字以下にしてください。");
     }
-    const prompt = "「" + idiom + '」について、{"japanese": [日本語訳3つを含めた配列], synonyms: [すべての類義語を英語で表した配列], antonyms: [すべての対義語を英語で表した配列], exampleSentece: "例文", pronunciation: "発音記号"}をこの形式で、これのみ出力して'
+    const prompt = "「" + idiom + '」について、{"japanese": [日本語訳3つを含めた配列], synonyms: [すべての類義語を英語で表した配列], antonyms: [すべての対義語を英語で表した配列], exampleSentence: "例文", pronunciation: "発音記号"}をこの形式で、これのみ出力して'
     return requestGemini(prompt);
   }catch(err){
     console.error(err);
