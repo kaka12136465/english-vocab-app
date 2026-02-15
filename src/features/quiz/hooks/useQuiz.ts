@@ -77,9 +77,9 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
     }
 
     const words = await getWordsInWordBook(wordBookId);
-    const range = quizRange ? [Math.max(0, Number(quizRange[0])), Math.min(words.length, Number(quizRange[1]))] : [0, words.length];
+    const range = quizRange ? [Math.max(1, Number(quizRange[0])), Math.min(words.length, Number(quizRange[1]))] : [0, words.length];
     const rangeWords = words.filter((word) => {
-      return word.index >= range[0] && word.index < range[1];
+      return word.index >= range[0] && word.index <= range[1];
     });
     
     if(rangeWords.length === 0){
@@ -105,7 +105,6 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
 
     const isCorrect = quizService.checkAnswer(userAnswer, currentQuestion.correctAnswers);
 
-    
     const answer: QuizAnswer = {
       questionIndex: quizState.currentQuestionIndex,
       userAnswer,
@@ -116,9 +115,7 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
     setQuizState({
       ...quizState,
       answers: quizState.answers.concat([answer])
-    })
-    /*
-    */
+    });
     return isCorrect;
   }, [quizState, userId]);
 

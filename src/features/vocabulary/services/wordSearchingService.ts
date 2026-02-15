@@ -30,8 +30,6 @@ export async function scrapeWord(word: string): Promise<ScrapingWordData> {
   const response = await fetch(
     `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`
   );
-  
-  console.log("fetch from", `https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(word)}`)
 
   if (!response.ok) {
     if (response.status === 404){
@@ -58,7 +56,6 @@ export async function scrapeWord(word: string): Promise<ScrapingWordData> {
   const examples: string[] = [];
   const isFound: boolean = true;
 
-  console.log("発音", entry.phonetics)
   entry.phonetics.forEach((phonetic) => {
     if(phonetic.text) pronunciation = phonetic.text;
   });

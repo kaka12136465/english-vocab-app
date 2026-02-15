@@ -11,7 +11,7 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
   const [selectedWordBookIndex, setSelectedWordBookIndex] = useState<number>(0);
   const [wordCount, setWordCount] = useState(10);
   const [wordBooks, setWordBooks] = useState<WordBook[]>([]);
-  const [quizRange, setQuizRange] = useState<[string, string]>(['0', '0']);
+  const [quizRange, setQuizRange] = useState<[string, string]>(["", ""]);
 
   const quizModes: { value: QuizMode; label: string; description: string; icon: string }[] = [
     {

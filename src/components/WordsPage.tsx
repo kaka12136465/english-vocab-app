@@ -29,8 +29,10 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
   const [edittingWord, setEdittingWord] = useState<Word | null>(null);
   const [selectedSortOption, setSelectedSortOption] = useState<SortOption>("createdAtDesc");
   const [sortedWords, setSortedWords] = useState<Word[]>([]);
+  const [wordsCnt, setWordsCnt] = useState(0);
 
   useEffect(() => {
+    setWordsCnt(words.length);
     const sorted = sortWords(words, selectedSortOption);
     setSortedWords(sorted);
   }, [words, selectedSortOption]);
@@ -76,6 +78,7 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
   const handleDeleteWord = async (wordId: string) => {
     const success = await deleteWord(wordId);
     loadWordsInWordBook();
+    setWordsCnt(prev => prev - 1);
     return success
   }
 
@@ -145,7 +148,8 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
             <AddWordForm
               onSubmit={handleAddWord}
               onCancel={() => setShowAddForm(false)}
-              wordsNum={sortedWords.length}
+              wordsCnt={wordsCnt}
+              setWordsCnt={setWordsCnt}
             />
           </div>
         )}
@@ -170,7 +174,7 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
             <option key={option.value} value={option.value}>{option.label}</option>
           ))}
         </select>
-        {sortedWords.length === 0 && !showAddForm && (
+        {wordsCnt === 0 && !showAddForm && (
           <div className="text-center py-12 bg-white rounded-lg shadow">
             <svg
               className="mx-auto h-12 w-12 text-gray-400 mb-4"
@@ -190,11 +194,11 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
           </div>
         )}
 
-        {sortedWords.length > 0 && (
+        {wordsCnt > 0 && (
           <div className="space-y-4">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-800">
-                登録単語: {sortedWords.length}件
+                登録単語: {wordsCnt}件
               </h2>
             </div>
 

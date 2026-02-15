@@ -32,19 +32,6 @@ export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord, setShowA
           <>
             <div className="flex gap-6">
               <p className="flex-1 text-gray-800">{word.japanese.join(', ')}</p>
-              <button 
-                onClick={async () => {await onDeleteWord(word.id); setEdittingWord(null); setShowEditForm(false);}}
-                className="text-sm text-red-600 hover:text-red-700 font-medium"
-              >
-                削除
-              </button> 
-
-              <button
-                onClick={() => {setEdittingWord(word);setShowEditForm(true);setShowAddForm(false);}}
-                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
-              >
-                編集
-              </button>
             </div>
             {word.pronunciation && (
               <p className="text-sm text-gray-500">[{word.pronunciation}]</p>
@@ -69,6 +56,22 @@ export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord, setShowA
                 <p className="text-gray-800 italic">{word.exampleSentence}</p>
               </div>
             )}
+
+            <div className="flex justify-end gap-6">
+              <button 
+                onClick={async () => {await onDeleteWord(word.id); setEdittingWord(null); setShowEditForm(false);}}
+                className="text-sm text-red-600 hover:text-red-700 font-medium"
+              >
+                削除
+              </button> 
+
+              <button
+                onClick={() => {setEdittingWord(word);setShowEditForm(true);setShowAddForm(false);}}
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+              >
+                編集
+              </button>
+            </div>
 
             <div className="pt-2 border-t border-gray-200">
               <p className="text-xs text-gray-500">

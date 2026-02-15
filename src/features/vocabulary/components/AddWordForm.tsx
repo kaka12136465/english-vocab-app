@@ -5,12 +5,13 @@ import { scrapeWord, translateEnToJp } from '../services/wordSearchingService';
 interface AddWordFormProps {
   onSubmit: (formData: AddWordFormData) => Promise<boolean>; // handleAddWord関数を受け取る
   onCancel: () => void;
-  wordsNum: number;
+  wordsCnt: number;
+  setWordsCnt: (cnt: number) => void;
 }
 
 
 // WordsPageから呼ばれる
-export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wordsNum }) => {
+export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wordsCnt, setWordsCnt }) => {
   const [formData, setFormData] = useState<AddWordFormData>({
     english: '',
     japanese: [''],
@@ -27,11 +28,9 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
   const [isSearched, setIsSearched] = useState(false);
   const [wordsFile, setWordsFile] = useState<File | null>(null);
   const [addingWordsForm, setAddingWordsForm] = useState<string>("");
-  const [addingWordsIndexes, setAddingWordsIndexes] = useState<number[]>([]);
-  const [addingWords, setAddingWords] = useState<string[]>([]);
+  const [addingWords, setAddingWords] = useState<[string, number][]>([]); // [英単語, 番号]の配列
   const [isSingleAddition, setIsSingleAddition] = useState<boolean>(true);
   const [isParallelAddition, setIsParallelAddition] = useState<boolean>(false);
-  const [wordsCnt, setWordsCnt] = useState<number>(wordsNum);
 
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const addButtonRef = useRef<HTMLButtonElement>(null);
@@ -114,6 +113,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
           description: '',
         });
         setError("");
+        setWordsCnt(wordsCnt + 1);
       }
       setIsSearched(false);
     } catch (err: any) {
@@ -142,7 +142,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
       console.log("scraping result", word);
       const translateResponse:string = await translateEnToJp(formData.english);
       console.log("translate result", translateResponse);
-      const index = wordsNum + 1;
+      const index = wordsCnt + 1;
 
       if(!word.isFound){
         setError("英単語が見つかりません");
@@ -184,7 +184,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
           console.log(wordsData);
           console.log(addingWords);
 
-          let index = wordsNum + 1;
+          let index = wordsCnt + 1;
           for(const word of addingWords){
             console.log("searching", word);
             const scrapedData = await scrapeWord(word);
@@ -231,24 +231,24 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
 
   const handleAddmultipleWords = async () => {
     setLoading(true);
-    if(addingWords.length === 0){
+    let addingWordsCopy: [string, number][] = [...addingWords];
+    if(addingWordsCopy.length === 0){
       setError("追加する単語がありません");
       setLoading(false);
       return;
     }
     try{
-      for(let i = 0; addingWords.length != 0; i++){
-        const word = addingWords[0];
-        console.log("searching", word);
+      for(let i = 0; addingWordsCopy.length != 0; i++){
+        console.log("チェック", addingWords);
+        const [word, index] = addingWordsCopy[0];
         const scrapedData = await scrapeWord(word);
-        console.log("scraping result", word);
         if(!scrapedData.isFound){
           setError("英単語が見つかりません: " + word);
           setIsSearchLoading(false);
           setLoading(false);
           return;
         }
-        const translateResponse:string = "テスト" //await translateEnToJp(word);
+        const translateResponse:string = "てすと"//await translateEnToJp(word);
         const newFormData: AddWordFormData = {
           english: word,
           japanese: translateResponse.split(/[,、\n]/),
@@ -256,37 +256,39 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
           synonyms: Array.from(scrapedData.synonyms),
           exampleSentence: scrapedData.exampleSentence,
           pronunciation: scrapedData.pronunciation,
-          index: addingWordsIndexes[i] || wordsCnt + 1,
+          index: index,
           description: '',
         }
         const success = await onSubmit(newFormData);
         if(!success){
           throw new Error("データベースへ単語を追加できませんでした" + newFormData);
         }
-        addingWords.splice(0, 1);
-        setWordsCnt(prev => prev + 1);
+        setAddingWords(prev => prev.filter((w) => w[0] !== word));
+        addingWordsCopy = addingWordsCopy.filter((w) => w[0] !== word);
+        
+        setWordsCnt(wordsCnt + 1);
       }
       setError("");
     }catch(err){
       console.error("まとめて単語追加に失敗しました");
+      throw new Error(err instanceof Error ? err.message : String(err));
     }finally{
       setLoading(false);
     }
   }
 
-  const addWord = async (word: string, index: number) => {
+  const addWord = async (wordData: [string, number]) => {
     setLoading(true);
+    const [word, index] = wordData;
     try{
-      console.log("searching", word);
       const scrapedData = await scrapeWord(word);
-      console.log("scraping result", word);
       if(!scrapedData.isFound){
         setError("英単語が見つかりません: " + word);
         setIsSearchLoading(false);
         setLoading(false);
         return;
       }
-      const translateResponse:string = await translateEnToJp(word);
+      const translateResponse:string = "test"//await translateEnToJp(word);
       const newFormData: AddWordFormData = {
         english: word,
         japanese: translateResponse.split(/[,、\n]/),
@@ -297,13 +299,12 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
         index: index,
         description: '',
       }
-      console.log(newFormData);
       const success = await onSubmit(newFormData);
       if(!success){
         throw new Error("データベースへ単語を追加できませんでした" + newFormData);
       }
-      setAddingWords(prev => prev.slice(1));
-      setAddingWordsIndexes(prev => prev.slice(1));
+      setAddingWords(prev => prev.filter((w) => w[0] !== word));
+      setWordsCnt(wordsCnt + 1);
       setError("");
     }catch(err){
       console.error("単語追加に失敗しました");
@@ -368,6 +369,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
           まとめて単語を追加
       </button>
 
+      {/* まとめて単語追加フォーム */}
       {!isSingleAddition ? (
         <div className="flex bg-white px-4 flex-col">
           {error && (
@@ -382,26 +384,31 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
                   type="number"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  value={addingWordsIndexes[index] || wordsNum + 1 + index}
+                  value={word[1] || wordsCnt + 1 + index}
                   className="[field-sizing:content] focus:outline-none underline"
-                  onChange={(e) => {e.preventDefault(); setAddingWordsIndexes(prev => prev.map((i, j) => j === index ? Number(e.target.value) : i))}}
+                  onChange={(e) => {e.preventDefault(); setAddingWords(prev => prev.map((w, i) => i === index ? [w[0], Number(e.target.value)] : w))}}
                 />
                 ：
                 <input
                   type="text"
                   className="font-bold"
-                  value={word}
-                  onChange={(e) => {setAddingWords(prev => prev.map((w, i) => i === index ? e.target.value : w))}}
+                  value={word[0]}
+                  onChange={(e) => {setAddingWords(prev => prev.map((w, i) => i === index ? [e.target.value, w[1]] : w))}}
+                  onKeyDown={(e) => {
+                    e.preventDefault();
+                    if(e.key === "Enter"){
+                      addWord(word);
+                    }
+                  }}
                   placeholder="単語を入力してください"
                 />
               </div>
               <button
                   onClick={(e) => {
                     e.preventDefault(); 
-                    setAddingWords(prev => prev.filter((_, i) => i !== index));
-                    setWordsCnt(prev => prev - 1);
-                    setAddingWordsIndexes(prev => prev.map((v, i) => i > index ? v-1 : v).filter((_, i) => i !== index));
+                    setAddingWords(prev => prev.filter((_, i) => i !== index).map((w, i) => i >= index ? [w[0], w[1] - 1] : w));
                   }}
+                  disabled={loading}
                   className="shrink-0 px-3 py-1 text-red-600 hover:bg-red-700 rounded-md font-bold border border-red-600 bg-red-600 text-white"
               >削除</button>
             </div>
@@ -415,12 +422,11 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
             onKeyDown={(e) => {
               if(e.key === "Enter"){
                 e.preventDefault();
-                setAddingWords(prev => [...prev, addingWordsForm]);
-                setAddingWordsIndexes(prev => [...prev, wordsCnt + 1]);
-                setWordsCnt(prev => prev + 1);
+                setAddingWords(prev => [...prev, [addingWordsForm, wordsCnt + prev.length + 1]]);
                 setAddingWordsForm("");
+                console.log(addingWords);
                 if(isParallelAddition){
-                  addWord(addingWordsForm, wordsCnt + 1);
+                  addWord([addingWordsForm, wordsCnt + addingWords.length + 1]);
                 }
                 e.currentTarget.focus();
               }
@@ -440,7 +446,13 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
             </button>}
             <span className="ml-4">入力後すぐに追加</span>
             <input type="checkbox" checked={isParallelAddition} 
-              onChange={(e) => setIsParallelAddition(e.target.checked)} 
+              onChange={(e) => {
+                setIsParallelAddition(e.target.checked);
+                if(e.target.checked){                   
+                  addingWords.forEach((word) => {
+                    addWord(word);
+                  })
+              }}}
               className="ml-2 mr-1 size-5" />
           </div>
         </div>
