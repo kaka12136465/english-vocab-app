@@ -11,7 +11,7 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
   const [selectedWordBookIndex, setSelectedWordBookIndex] = useState<number>(0);
   const [wordCount, setWordCount] = useState(10);
   const [wordBooks, setWordBooks] = useState<WordBook[]>([]);
-  const [quizRange, setQuizRange] = useState<[string, string]>(['1', '100']);
+  const [quizRange, setQuizRange] = useState<[string, string]>(['0', '0']);
 
   const quizModes: { value: QuizMode; label: string; description: string; icon: string }[] = [
     {
@@ -49,16 +49,24 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
     fetchWordBooks();
   }, []);
 
-  const handleStartQuiz = () => {
-    if (wordCount < 1 || wordCount > 50) {
-      alert('出題数は1〜50の範囲で設定してください');
+  const handleStartQuiz = async () => {
+    if (wordCount < 1 || wordCount > 100) {
+      alert('出題数は1〜100の範囲で設定してください');
       return;
     }
     if(wordBooks.length === 0){
       console.error("単語帳が存在しません");
       return;
     }
-    onStartQuiz(selectedMode, [Number(quizRange[0]), Number(quizRange[1])], wordCount, wordBooks[selectedWordBookIndex].id);
+
+    let range: [number, number] = [Number(quizRange[0]), Number(quizRange[1])];
+    if(range[0] <= 0){
+      range[0] = 1;
+    }
+    if(range[1] <= 0){
+      range[1] = 1000000000;
+    }
+    onStartQuiz(selectedMode, range, wordCount, wordBooks[selectedWordBookIndex].id);
   };
 
   return (
@@ -98,20 +106,38 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
               </option>
               ))}
           </select>
+          {/* 出題範囲設定 */}
           <div className="my-6">
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={quizRange[0]}
-              onChange={(e) => setQuizRange([e.target.value, quizRange[1]])}
+              placeholder="1"
+              onChange={(e) => {
+                e.preventDefault();
+                if(e.target.value.match(/^[0-9]*$/)){
+                  setQuizRange([e.target.value, quizRange[1]]);
+                }
+              }}
               className="w-20 px-2 py-1 ml-4 mr-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
             〜
             <input
-              type="number"
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={quizRange[1]}
-              onChange={(e) => setQuizRange([quizRange[0], e.target.value])}
+              placeholder="100"
+              onChange={(e) => {
+                e.preventDefault();
+                if(e.target.value.match(/^[0-9]*$/)){
+                  setQuizRange([quizRange[0], e.target.value]);
+                }
+              }}
               className="w-20 px-2 py-1 ml-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
+             *未入力は全範囲
           </div>
 
           {/* 出題数設定 */}
@@ -124,7 +150,7 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
               onChange={(e) => setWordCount(Number(e.target.value))}
               className="p-1 mb-2 border rounded "
             >
-              {[...Array(10)].map((_, i) => (
+              {[...Array(20)].map((_, i) => (
                 <option key={(i+1)*5} value={(i+1)*5}>
                   {(i+1)*5}問
                 </option>

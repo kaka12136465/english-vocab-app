@@ -286,7 +286,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
         setLoading(false);
         return;
       }
-      const translateResponse:string = "テスト" //await translateEnToJp(word);
+      const translateResponse:string = await translateEnToJp(word);
       const newFormData: AddWordFormData = {
         english: word,
         japanese: translateResponse.split(/[,、\n]/),

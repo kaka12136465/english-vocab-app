@@ -77,7 +77,7 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
     }
 
     const words = await getWordsInWordBook(wordBookId);
-    const range = quizRange || [0, words.length];
+    const range = quizRange ? [Math.max(0, Number(quizRange[0])), Math.min(words.length, Number(quizRange[1]))] : [0, words.length];
     const rangeWords = words.filter((word) => {
       return word.index >= range[0] && word.index < range[1];
     });

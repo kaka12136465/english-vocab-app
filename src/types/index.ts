@@ -28,6 +28,7 @@ export interface WordBook {
   description?: string;
   createdAt: Timestamp;
   ownerId: string; // 単語帳の所有者ユーザーID
+  wordsCnt: number; // 単語数
 }
 
 // ユーザーの学習進捗データ型
