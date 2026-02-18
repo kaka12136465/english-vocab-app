@@ -2,22 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { QuizCard } from '@/features/quiz/components/QuizCard';
 import { QuizResult } from '@/features/quiz/components/QuizResult';
 import { useQuiz } from '@/features/quiz/hooks/useQuiz';
-import { QuizMode, Word } from '@/types';
+import { QuizSetting, UserData, Word } from '@/types';
 import { QuizState } from '@/features/quiz/types/quiz.types';
 
 interface QuizPageProps {
-  userId: string | null;
+  userData: UserData;
   onBackToHome: () => void;
-  mode: QuizMode;
-  quizRange?: [number, number];
-  wordCount: number;
-  wordBookId: string;
+  quizSetting: QuizSetting;
 }
 
-export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, quizRange, wordCount, wordBookId }) => {
+export const QuizPage: React.FC<QuizPageProps> = ({ userData, onBackToHome, quizSetting}) => {
   const [targetWords, setTargetWords] = useState<Word[]>([]);
-  const [quizMode, setMode] = useState<QuizMode>(mode);
-  const [quizWordCount, setWordCount] = useState<number>(wordCount);
   const [quizState, setQuizState] = useState<QuizState>({
     config: null,
     questions: [],
@@ -37,23 +32,17 @@ export const QuizPage: React.FC<QuizPageProps> = ({ userId, onBackToHome, mode, 
     checkUserAnswer,
     addJpToEnWord,
   } = useQuiz({
-        userId: userId,
-        wordBookId: wordBookId, 
-        mode: quizMode, 
         words: targetWords,
-        quizRange: quizRange,
-        wordCount: quizWordCount, 
+        userData: userData,
+        quizSetting: quizSetting,
         quizState: quizState, 
         setTargetWords: setTargetWords, 
-        setMode: setMode, 
-        setWordCount: setWordCount, 
         setQuizState: setQuizState
       });
 
   useEffect(() => {
     const start = async () => {
       try {
-        if (!userId) return;
         await initializeQuiz();
       } catch (error) {
         console.error("Error fetching words:", error);

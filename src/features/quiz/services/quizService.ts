@@ -1,6 +1,8 @@
-import { Word, QuizMode } from '@/types';
+import { Word, QuizMode, QuizSetting } from '@/types';
 import { QuizQuestionData } from '../types/quiz.types';
 import { requestGemini } from '@/lib/geminiRequestService';
+import { db } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 /**
  * クイズの問題文を生成
@@ -117,4 +119,11 @@ export const calculateQuizSummary = (
     incorrectAnswers: totalQuestions - correctAnswers,
     accuracy: totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0,
   };
+
+
 };
+
+export const updateLastPlayQuizSettingOfUser = async (userId: string, quizSetting: QuizSetting) => {
+  const docRef = doc(db, "userDatas", userId);
+  await updateDoc(docRef, {lastPlayQuizSetting: quizSetting});
+}

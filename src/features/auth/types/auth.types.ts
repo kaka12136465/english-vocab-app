@@ -1,3 +1,4 @@
+import { UserData } from '@/types';
 import { User as FirebaseUser } from 'firebase/auth';
 
 // ユーザー型
@@ -10,6 +11,7 @@ export interface User {
 // 認証状態の型
 export interface AuthState {
   user: User | null;
+  userData: UserData | null;
   loading: boolean;
   error: string | null;
 }

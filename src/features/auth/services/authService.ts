@@ -5,7 +5,9 @@ import {
   onAuthStateChanged,
   User as FirebaseUser,
 } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { UserData } from '@/types';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 
 /**
  * メールアドレスとパスワードでユーザーを登録
@@ -50,6 +52,41 @@ export const onAuthStateChange = (callback: (user: FirebaseUser | null) => void)
 };
 
 /**
+ * ユーザーデータを新規追加
+ */
+export const resisterNewUserData = async (userId: string): Promise<UserData> => {
+  const newUserData: UserData ={
+    userId: userId,
+    lastPlayQuizSetting: {
+      quizMode: 'english-to-japanese',
+      wordBookId: '',
+      quizRange: [1,100],
+      numberOfQuiz: 10,
+    },
+    weakWordIds: [],
+    notWeakWordIds: []
+  }
+  await setDoc(doc(db, 'userDatas', userId), 
+    newUserData
+  );
+  return newUserData;
+}
+
+/**
+ * ユーザーデータを取得
+ */
+export const fetchUserData = async (userId: string): Promise<UserData | null> => {
+  const docRef = doc(db, "userDatas", userId);
+  const docSnap = await getDoc(docRef);
+  if(docSnap.exists()){
+    const userData = docSnap.data();
+    return userData as UserData;
+  }else{
+    return null
+  }
+}
+
+/**
  * Firebase Auth のエラーコードを日本語メッセージに変換
  */
 const getAuthErrorMessage = (errorCode: string): string => {
@@ -74,3 +111,6 @@ const getAuthErrorMessage = (errorCode: string): string => {
       return '認証エラーが発生しました';
   }
 };
+
+
+

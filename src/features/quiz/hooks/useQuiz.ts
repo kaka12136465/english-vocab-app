@@ -1,22 +1,17 @@
 import { useCallback } from 'react';
-import { Word, QuizMode} from '@/types';
+import { Word, QuizSetting, UserData} from '@/types';
 import { QuizAnswer, QuizQuestionData, QuizState } from '../types/quiz.types';
 import * as quizService from '../services/quizService';
-import {getProgressStats, updateUserProgress } from '@/features/userProgress/services/progressService';
-import { checkCorrectTranslation } from '../services/quizService';
+// import {getProgressStats, updateUserProgress } from '@/features/userProgress/services/progressService';
+import { checkCorrectTranslation, updateLastPlayQuizSettingOfUser } from '../services/quizService';
 import { getWordsInWordBook, updateWord } from '@/features/vocabulary/services/wordBookService';
 
 interface useQuizProps {
-  userId: string | null;
-  wordBookId: string;
-  mode: QuizMode;
   words: Word[];  // 指定単語帳の全単語
-  wordCount: number; // 出題数
-  quizRange?: [number, number]; // 出題範囲(指定しないなら全範囲)
+  quizSetting: QuizSetting;
+  userData: UserData;
   quizState: QuizState;
   setTargetWords: (words: Word[]) => void;
-  setMode: (mode: QuizMode) => void;
-  setWordCount: (wordCount: number) => void;
   setQuizState: (quizState: QuizState) => void;
 }
 
@@ -35,28 +30,26 @@ interface useQuizReturnProps{
 /**
  * クイズ機能を管理するカスタムフック
  */
-export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wordBookId, words, mode, wordCount, quizRange, quizState, setTargetWords, setMode, setWordCount, setQuizState}) => {
-  setMode;
-  setWordCount;
+export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({words, userData, quizSetting, quizState, setTargetWords, setQuizState}) => {
   /**
    * クイズをリセット
    * 与えられた単語リストからwordCount分の単語をランダムに選び、クイズを初期化する
    */
   const resetQuiz = useCallback((words: Word[]) => {
-    if(!mode){
+    if(!quizSetting.quizMode){
       console.error("クイズのモードが選択されていません");
       return;
     }
 
     // ランダムにシャッフル
     const shuffled = [...words].sort(() => 0.5 - Math.random());
-    const selectedWords = shuffled.slice(0, Math.min(wordCount, shuffled.length));
+    const selectedWords = shuffled.slice(0, Math.min(quizSetting.numberOfQuiz, shuffled.length));
     const questions = selectedWords.map(word => 
-      quizService.generateQuestion(word, mode)
+      quizService.generateQuestion(word, quizSetting.quizMode)
     );
 
     const newQuizState: QuizState = {
-      config: { mode, wordCount },
+      config: { mode: quizSetting.quizMode, wordCount: quizSetting.numberOfQuiz },
       questions: questions,
       currentQuestionIndex: 0,
       answers: [],
@@ -64,20 +57,27 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
     };
 
     setQuizState(newQuizState);
-  }, [mode, wordCount, words]);
+  }, [quizSetting, words]);
 
   /**
    * クイズを初期化する
    * 指定の単語帳から全単語を取得し、そこからquizRangeに基づいて単語を抽出する
    */
   const initializeQuiz = useCallback(async () => {
-    if(!mode){
+    if(!quizSetting.quizMode){
       console.error("クイズのモードが選択されていません");
       return;
     }
 
-    const words = await getWordsInWordBook(wordBookId);
-    const range = quizRange ? [Math.max(1, Number(quizRange[0])), Math.min(words.length, Number(quizRange[1]))] : [0, words.length];
+    const words = await getWordsInWordBook(quizSetting.wordBookId);
+    let range: [number, number] = quizSetting.quizRange;
+    if(range[0] <= 0){
+      range[0] = 1;
+    }
+    if(range[1] <= 0){
+      range[1] = words.length;
+    }
+    range = [Math.max(1, range[0]), Math.min(words.length, range[1])];
     const rangeWords = words.filter((word) => {
       return word.index >= range[0] && word.index <= range[1];
     });
@@ -88,9 +88,12 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
       throw new Error("指定された範囲に単語が存在しません");
     }
 
+    await updateLastPlayQuizSettingOfUser(userData.userId, {...quizSetting, quizRange: range});
+    console.log("単語の数", words.length);
+    console.log("ユーザーのクイズ設定を更新", {...quizSetting, quizRange: range});
     await setTargetWords(rangeWords);
     await resetQuiz(rangeWords);
-  }, [mode, wordCount]);
+  }, [quizSetting]);
 
   
 
@@ -117,7 +120,7 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
       answers: quizState.answers.concat([answer])
     });
     return isCorrect;
-  }, [quizState, userId]);
+  }, [quizState, userData]);
 
   /**
    * 「次へ」ボタンを押すと呼ばれる。
@@ -136,7 +139,8 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
         isComplete: true
       })
       // 進捗を更新（ユーザーがログイン中の場合）
-      if (userId) {
+      /* 無効化中
+      if (userData) {
         quizState.answers.forEach(async answer => {
           try {
             await updateUserProgress(
@@ -150,6 +154,7 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userId, wor
         });
       }
       console.log(userId ? await getProgressStats(userId) : "ユーザーなし");
+      */
     }
   }, [quizState]);
 

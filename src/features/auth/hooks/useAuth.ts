@@ -1,23 +1,43 @@
 import { useState, useEffect } from 'react';
 import { AuthState, mapFirebaseUser } from '../types/auth.types';
 import * as authService from '../services/authService';
+import { fetchUserData, resisterNewUserData } from '../services/authService';
+import { UserData } from '@/types';
 
 /**
  * 認証状態を管理するカスタムフック
  */
 export const useAuth = () => {
+    const emptyUserData: UserData ={
+    userId: "",
+    lastPlayQuizSetting: {
+      quizMode: 'english-to-japanese',
+      wordBookId: '',
+      quizRange: [0,0],
+      numberOfQuiz: 0
+    },
+    weakWordIds: [],
+    notWeakWordIds: []
+  }
+
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
+    userData: emptyUserData,
     loading: true,
     error: null,
   });
 
   useEffect(() => {
     // 認証状態の変更を監視
-    const unsubscribe = authService.onAuthStateChange((firebaseUser) => {
+    const unsubscribe = authService.onAuthStateChange(async (firebaseUser) => {
       const user = mapFirebaseUser(firebaseUser);
+      let userData = user ? await fetchUserData(user.uid) : null;
+      if(!userData && user){
+        userData = await resisterNewUserData(user.uid);
+      }
       setAuthState({
-        user,
+        user: user,
+        userData: userData,
         loading: false,
         error: null,
       });
@@ -78,8 +98,11 @@ export const useAuth = () => {
     }
   };
 
+
+
   return {
     user: authState.user,
+    userData: authState.userData ?? emptyUserData,
     loading: authState.loading,
     error: authState.error,
     signUp,

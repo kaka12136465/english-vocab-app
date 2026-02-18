@@ -1,17 +1,17 @@
 import React, { useEffect, useState} from 'react';
-import { QuizMode, WordBook } from '@/types';
+import { QuizMode, QuizSetting, UserData, WordBook } from '@/types';
 import { getAllWordBooks } from '@/features/vocabulary/services/vocabularyService';
 
 interface HomePageProps {
-  onStartQuiz: (mode: QuizMode, quizRange: [number, number], wordCount: number, wordBookId: string) => void;
+  onStartQuiz: () => void; //
+  userData: UserData;
+  quizSetting: QuizSetting;
+  setQuizSetting: (quizSetting: QuizSetting) => void;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
-  const [selectedMode, setSelectedMode] = useState<QuizMode>('english-to-japanese');
-  const [selectedWordBookIndex, setSelectedWordBookIndex] = useState<number>(0);
-  const [wordCount, setWordCount] = useState(10);
-  const [wordBooks, setWordBooks] = useState<WordBook[]>([]);
-  const [quizRange, setQuizRange] = useState<[string, string]>(["", ""]);
+export const HomePage: React.FC<HomePageProps> = ({onStartQuiz, quizSetting, setQuizSetting}) => {
+  const [wordBooksDict, setWordBooksDict] = useState<Record<string, string>>({}); // key=単語帳のID, value=単語帳の名前
+  const [quizRange, setQuizRange] = useState<[string, string]>([quizSetting.quizRange[0].toString(), quizSetting.quizRange[1].toString()]);
 
   const quizModes: { value: QuizMode; label: string; description: string; icon: string }[] = [
     {
@@ -42,31 +42,25 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
   useEffect (() => {
     const fetchWordBooks = async () => {
       const wordBooks: WordBook[] = await getAllWordBooks();
-
-      wordBooks.sort((a, b) => {return a.createdAt?.toMillis() - b.createdAt?.toMillis()})
-      setWordBooks(wordBooks);
+      const dict: Record<string, string> = wordBooks.reduce((acc, word) => {
+        acc[word.id] = word.name;
+        return acc;
+      }, {} as Record<string, string>);
+      setWordBooksDict(dict);
     }
     fetchWordBooks();
   }, []);
 
   const handleStartQuiz = async () => {
-    if (wordCount < 1 || wordCount > 100) {
+    if (quizSetting.numberOfQuiz < 1 || quizSetting.numberOfQuiz > 100) {
       alert('出題数は1〜100の範囲で設定してください');
       return;
     }
-    if(wordBooks.length === 0){
+    if(Object.keys(wordBooksDict).length === 0){
       console.error("単語帳が存在しません");
       return;
     }
-
-    let range: [number, number] = [Number(quizRange[0]), Number(quizRange[1])];
-    if(range[0] <= 0){
-      range[0] = 1;
-    }
-    if(range[1] <= 0){
-      range[1] = 1000000000;
-    }
-    onStartQuiz(selectedMode, range, wordCount, wordBooks[selectedWordBookIndex].id);
+    onStartQuiz();
   };
 
   return (
@@ -77,27 +71,28 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
       {/* メインコンテンツ */}
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="bg-white rounded-2xl shadow-xl p-8">
+
+          {/* 単語帳選択 */}
           <div className="space-y-4 mb-8">
-            {/* 単語帳選択 */}
             <select 
-              value={selectedWordBookIndex} 
-              onChange={(e) => {setSelectedWordBookIndex(Number(e.target.value));}}
+              value={quizSetting.wordBookId} 
+              onChange={(e) => {
+                setQuizSetting({...quizSetting, wordBookId: e.target.value});
+              }}
               className="px-4 py-2 border rounded"
             >
-              {wordBooks.map((item: WordBook, index) => (
-                <option key={index} value={index}>
-                  {item.name}
+              {Object.keys(wordBooksDict).map((key: string) => (
+                <option key={key} value={key}>
+                  {wordBooksDict[key]}
                 </option>
                 ))}
             </select>
-            
-
-            {/* モード選択 */}
           </div>
 
+          {/* クイズモード */}
           <select 
-            value={selectedMode} 
-            onChange={(e) => {setSelectedMode(modeMap.get(e.target.value ?? "英 → 和") as QuizMode);}}
+            value={quizSetting.quizMode} 
+            onChange={(e) => {setQuizSetting({...quizSetting, quizMode: modeMap.get(e.target.value ?? "英 → 和") as QuizMode});}}
             className="px-4 py-2 border rounded"
           >
             {Array.from(modeMap.keys()).map((item, index) => (
@@ -106,6 +101,7 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
               </option>
               ))}
           </select>
+
           {/* 出題範囲設定 */}
           <div className="my-6">
             <input
@@ -118,6 +114,7 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
                 e.preventDefault();
                 if(e.target.value.match(/^[0-9]*$/)){
                   setQuizRange([e.target.value, quizRange[1]]);
+                  setQuizSetting({...quizSetting, quizRange: [Number(e.target.value), Number(quizRange[1])]})
                 }
               }}
               className="w-20 px-2 py-1 ml-4 mr-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -133,11 +130,13 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
                 e.preventDefault();
                 if(e.target.value.match(/^[0-9]*$/)){
                   setQuizRange([quizRange[0], e.target.value]);
+                  setQuizSetting({...quizSetting, quizRange: [Number(quizRange[1]), Number(e.target.value)]})
                 }
               }}
               className="w-20 px-2 py-1 ml-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
             />
-             *未入力は全範囲
+            <p/>
+            <p>*未入力または0以下の入力は全範囲</p>
           </div>
 
           {/* 出題数設定 */}
@@ -146,8 +145,8 @@ export const HomePage: React.FC<HomePageProps> = ({onStartQuiz}) => {
               出題数：
             </label>
             <select
-              value={wordCount}
-              onChange={(e) => setWordCount(Number(e.target.value))}
+              value={quizSetting.numberOfQuiz}
+              onChange={(e) => setQuizSetting({...quizSetting, numberOfQuiz:Number(e.target.value)})}
               className="p-1 mb-2 border rounded "
             >
               {[...Array(20)].map((_, i) => (

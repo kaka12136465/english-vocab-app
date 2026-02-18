@@ -16,9 +16,18 @@ export interface Word {
   description: string; // 単語の補足説明
 }
 
+export interface QuizSetting{
+  quizMode: QuizMode; // クイズモード(英->和, 和->英, 音声->和)
+  wordBookId: string; // 単語帳のID
+  quizRange: [number, number]; // クイズの出題範囲(単語番号quizRange[0]~quizRange[1]の出題範囲)
+  numberOfQuiz: number; // クイズの数
+}
+
 export interface UserData {
-  userId: string;
-  lastOpenedWordBookId: string;
+  userId: string; // ユーザーID
+  lastPlayQuizSetting: QuizSetting; // 前回このユーザが行ったクイズの設定
+  weakWordIds: string[]; // 苦手単語のIDリスト
+  notWeakWordIds: string[]; // 苦手ではない単語のIDリスト(登録外の単語は未学習単語)
 }
 
 // 単語帳データ型
