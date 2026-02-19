@@ -1,4 +1,4 @@
-import { fetchUserQuizData } from "@/features/quiz/services/quizService";
+import { fetchUserQuizData, resisterNewUserQuizData } from "@/features/quiz/services/quizService";
 import { emptyUserQuizData, QuizMode, QuizSetting, UserQuizData } from "@/features/quiz/types/quiz.types";
 import { getAllWordBooks } from "@/features/vocabulary/services/vocabularyService";
 import { WordBook } from "@/types";
@@ -56,16 +56,29 @@ export const QuizSettingPage: React.FC<QuizSettingPageProps> = ({user}) => {
 
 		const fetchUserQuizDataAndSetQuizSetting = async () => {
 			if(!user){throw new Error("ユーザー情報がありません");}
-			const userQuizData = await fetchUserQuizData(user.uid);
+			let userQuizData = await fetchUserQuizData(user.uid);
+			if(!userQuizData){ 
+				await resisterNewUserQuizData(user.uid);
+				userQuizData = {...emptyUserQuizData, userId: user.uid};
+			}
+			
 			setUserQuizData(userQuizData);
 			setQuizSetting(userQuizData.lastPlayQuizSetting);
 		}
+
 		fetchUserQuizDataAndSetQuizSetting();
     fetchWordBooks();
   }, [user]);
 
 	useEffect(() => {
-		setQuizRange([quizSetting.quizRange[0].toString(), quizSetting.quizRange[1].toString()]);
+		let range = quizSetting.quizRange;
+		if(range[0] > 0){setQuizRange([range[0].toString(), quizRange[1]]);}
+		if(range[1] > 0){setQuizRange([quizRange[0], range[1].toString()]);}
+		
+		if(quizSetting.wordBookId === ""){
+			const wordBookId = Object.keys(wordBooksDict)[0];
+			setQuizSetting({...quizSetting, wordBookId: wordBookId});
+		}
 	}, [quizSetting])
 
   const handleStartQuiz = async () => {
@@ -77,8 +90,7 @@ export const QuizSettingPage: React.FC<QuizSettingPageProps> = ({user}) => {
       console.error("単語帳が存在しません");
       return;
     }
-		
-		navigate("/quiz", {state: {quizSetting: quizSetting, userQuizData: userQuizData}});
+	navigate("/quiz", {state: {quizSetting: quizSetting, gettedUserQuizData: userQuizData}});
   };
 
   return (
@@ -163,7 +175,7 @@ export const QuizSettingPage: React.FC<QuizSettingPageProps> = ({user}) => {
 							e.preventDefault();
 							if(e.target.value.match(/^[0-9]*$/)){
 							setQuizRange([quizRange[0], e.target.value]);
-							setQuizSetting({...quizSetting, quizRange: [Number(quizRange[1]), Number(e.target.value)]})
+							setQuizSetting({...quizSetting, quizRange: [Number(quizRange[0]), Number(e.target.value)]})
 							}
 					}}
 					className="w-20 px-2 py-1 ml-1 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -188,6 +200,51 @@ export const QuizSettingPage: React.FC<QuizSettingPageProps> = ({user}) => {
 							</option>
 					))}
 					</select>
+				</div>
+
+				{/* 単語絞り込み設定*/}
+				<div className="flex flex-col gap-3 p-4">
+					<div className="flex gap-2 ">
+						<span className="w-40">苦手でない単語を含める</span>
+						<span>
+							<input
+								type="checkbox"
+								checked={quizSetting.includeNotWeak}
+								onChange={(e) => {
+									setQuizSetting({...quizSetting, includeNotWeak: e.target.checked});
+								}}
+								className="size-4"
+							/>
+						</span>
+					</div>
+					
+					<div className="flex gap-2">
+						<span className="w-40">苦手な単語を含める</span>
+						<span>
+							<input
+								type="checkbox"
+								checked={quizSetting.includeWeak}
+								onChange={(e) => {
+									setQuizSetting({...quizSetting, includeWeak: e.target.checked});
+								}}
+								className="size-4"
+							/>
+						</span>
+					</div>
+					
+					<div className="flex gap-2">
+						<span className="w-40">未学習の単語を含める</span>
+						<span>
+							<input
+								type="checkbox"
+								checked={quizSetting.includeNotLearning}
+								onChange={(e) => {
+									setQuizSetting({...quizSetting, includeNotLearning: e.target.checked});
+								}}
+								className="size-4"
+							/>
+						</span>
+					</div>
 				</div>
 
 				{/* スタートボタン */}

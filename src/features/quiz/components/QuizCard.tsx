@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { QuizQuestionData} from '../types/quiz.types';
+import { QuizQuestionData, UserQuizData} from '../types/quiz.types';
 import { Word } from '@/types';
 
 interface QuizCardProps {
@@ -12,6 +12,8 @@ interface QuizCardProps {
   onPlayAudio?: () => void;
   onCheckAnswer: () => Promise<boolean>;
   onAddJpToEnWord: (word: Word, japanese:string) => Promise<void>;
+  resisterWordWeakness: (wordId:string, isWeak: boolean) => Promise<void>;
+  userQuizData: UserQuizData;
 }
 
 export const QuizCard: React.FC<QuizCardProps> = ({
@@ -24,6 +26,8 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   onPlayAudio,
   onCheckAnswer,
   onAddJpToEnWord,
+  resisterWordWeakness,
+  userQuizData,
 }) => {
 
   const [userAnswer, setUserAnswer] = useState('');
@@ -32,12 +36,15 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   const [loading, setLoading] = useState(false);
   const [isCheckButtonClicked, setIsCheckButtonClicked] = useState(false);
   const [isAddJpButtonClicked, setIsAddJpButtonClicked] = useState(false);
+  const [isWeak, setIsWeak] = useState<boolean>(userQuizData.wordWeaknesses[question.word.id] ?? false);
 
   // 問題が変わったらリセット
   useEffect(() => {
     setUserAnswer('');
     setIsSubmitted(false);
     setIsCorrect(null);
+    setIsWeak(userQuizData.wordWeaknesses[question.word.id] ?? false)
+    console.log(question.word.english, userQuizData.wordWeaknesses[question.word.id])
   }, [question]);
 
   useEffect(() => {
@@ -224,6 +231,14 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                 isCorrect && isCheckButtonClicked && isAddJpButtonClicked &&
                 <p className="text-sm text-gray-700 mt-1">追加完了</p>
               }
+              <input
+                type="checkbox"
+                checked={isWeak}
+                onChange={async (e) => {
+                  setIsWeak(e.target.checked);
+                  resisterWordWeakness(question.word.id, e.target.checked);
+                }}
+              />
             </div>
             
             <div className="flex items-center gap-3">

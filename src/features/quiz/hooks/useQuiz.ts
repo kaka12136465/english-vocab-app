@@ -12,6 +12,7 @@ interface useQuizProps {
   quizState: QuizState;
   setTargetWords: (words: Word[]) => void;
   setQuizState: (quizState: QuizState) => void;
+  setUserQuizData: (userQuizData: UserQuizData) => void;
 }
 
 interface useQuizReturnProps{
@@ -24,12 +25,13 @@ interface useQuizReturnProps{
   getQuizSummary: () => quizService.QuizSummary;
   checkUserAnswer: () => Promise<boolean>;
   addJpToEnWord: (word: Word, japanese: string) => Promise<void>;
+  resisterWordWeakness: (wordId: string, isWeak: boolean) => Promise<void>; 
 }
 
 /**
  * クイズ機能を管理するカスタムフック
  */
-export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userQuizData, quizSetting, quizState, setTargetWords, setQuizState}) => {
+export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userQuizData, quizSetting, quizState, setTargetWords, setQuizState, setUserQuizData}) => {
   /**
    * クイズをリセット
    * 与えられた単語リストからwordCount分の単語をランダムに選び、クイズを初期化する
@@ -77,19 +79,24 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userQuizDat
       range[1] = words.length;
     }
     range = [Math.max(1, range[0]), Math.min(words.length, range[1])];
-    const rangeWords = words.filter((word) => {
+    const filteredWords = words.filter((word) => {
       return word.index >= range[0] && word.index <= range[1];
+    }).filter((word) => {
+      const weakness = userQuizData.wordWeaknesses[word.id];
+      return (quizSetting.includeNotLearning && weakness == undefined) 
+            || (quizSetting.includeWeak && weakness == true)
+            || (quizSetting.includeNotWeak && weakness == false);
     });
-    
-    if(rangeWords.length === 0){
+
+    if(filteredWords.length === 0){
       console.error("指定された範囲に単語が存在しません");
       alert("指定された範囲に単語が存在しません");
       throw new Error("指定された範囲に単語が存在しません");
     }
 
     await updateLastPlayQuizSettingOfUser(userQuizData.userId, {...quizSetting, quizRange: range});
-    await setTargetWords(rangeWords);
-    await resetQuiz(rangeWords);
+    await setTargetWords(filteredWords);
+    await resetQuiz(filteredWords);
   }, [quizSetting, userQuizData]);
 
   
@@ -195,6 +202,11 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userQuizDat
     await updateWord(word.id, {...word, japanese:word.japanese.concat([japanese])});
   }, [quizState.answers])
 
+  const resisterWordWeakness = useCallback(async (wordId:string, isWeak: boolean) => {
+    await quizService.updateWordWeaknessForUser(userQuizData, wordId, isWeak);
+    setUserQuizData({...userQuizData, wordWeaknesses: {...userQuizData.wordWeaknesses, [wordId]: isWeak}});
+  }, [userQuizData, setUserQuizData])
+
   return {
     currentQuestion: quizState.questions[quizState.currentQuestionIndex],
     initializeQuiz,
@@ -205,5 +217,6 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userQuizDat
     getQuizSummary,
     checkUserAnswer,
     addJpToEnWord,
+    resisterWordWeakness
   };
 };

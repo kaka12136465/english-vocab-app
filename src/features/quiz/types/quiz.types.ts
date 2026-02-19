@@ -39,6 +39,9 @@ export interface QuizSetting{
   wordBookId: string; // 単語帳のID
   quizRange: [number, number]; // クイズの出題範囲(単語番号quizRange[0]~quizRange[1]の出題範囲)
   numberOfQuiz: number; // クイズの数
+  includeNotWeak: boolean; // 苦手ではない単語も含めるか
+  includeWeak: boolean; // 苦手な単語を含めるか
+  includeNotLearning: boolean; // 未学習の単語を含めるか
 }
 
 // ユーザーごとのクイズデータ
@@ -53,7 +56,10 @@ export const emptyUserQuizData: UserQuizData ={
     quizMode: 'english-to-japanese',
     wordBookId: '',
     quizRange: [0,0],
-    numberOfQuiz: 0
+    numberOfQuiz: 0,
+    includeNotLearning: true,
+    includeNotWeak: true,
+    includeWeak: true,
   },
   wordWeaknesses: {},
 }

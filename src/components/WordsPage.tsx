@@ -14,6 +14,7 @@ interface WordsPageProps {
 }
 
 export const WordsPage: React.FC<WordsPageProps> = ({ user }) => {
+  user;
   type SortOption = 'createdAtDesc' | 'createdAtAsc' | 'englishAsc' | 'englishDesc' | "indexAsc" | "indexDesc";
   const sortOptions: { value: SortOption; label: string }[] = [
     { value: 'createdAtDesc', label: '作成日昇順' },

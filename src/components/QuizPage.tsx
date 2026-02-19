@@ -3,7 +3,7 @@ import { QuizCard } from '@/features/quiz/components/QuizCard';
 import { QuizResult } from '@/features/quiz/components/QuizResult';
 import { useQuiz } from '@/features/quiz/hooks/useQuiz';
 import { Word } from '@/types';
-import { QuizState } from '@/features/quiz/types/quiz.types';
+import { emptyUserQuizData, QuizSetting, QuizState, UserQuizData } from '@/features/quiz/types/quiz.types';
 import { User } from 'firebase/auth';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -14,6 +14,7 @@ interface QuizPageProps {
 
 
 export const QuizPage: React.FC<QuizPageProps> = ({ user }) => {
+  user;
   const [targetWords, setTargetWords] = useState<Word[]>([]);
   const [quizState, setQuizState] = useState<QuizState>({
     config: null,
@@ -25,7 +26,15 @@ export const QuizPage: React.FC<QuizPageProps> = ({ user }) => {
 
   const navigate = useNavigate();
   const location = useLocation();
-  const {userQuizData, quizSetting} = location.state ?? {};
+  const {gettedUserQuizData, quizSetting} = location.state as {
+    gettedUserQuizData: UserQuizData, 
+    quizSetting: QuizSetting
+  } ?? {
+    gettedUserQuizData: emptyUserQuizData,
+    quizSetting: emptyUserQuizData.lastPlayQuizSetting
+  };
+
+  const [userQuizData, setUserQuizData] = useState<UserQuizData>(gettedUserQuizData);
 
   const {
     currentQuestion,
@@ -37,12 +46,14 @@ export const QuizPage: React.FC<QuizPageProps> = ({ user }) => {
     getQuizSummary,
     checkUserAnswer,
     addJpToEnWord,
+    resisterWordWeakness
   } = useQuiz({
     userQuizData,
     quizSetting,
     quizState,
     setTargetWords,
-    setQuizState
+    setQuizState,
+    setUserQuizData
   });
 
   useEffect(() => {
@@ -65,7 +76,6 @@ export const QuizPage: React.FC<QuizPageProps> = ({ user }) => {
           summary={summary}
           answers={quizState.answers}
           onRestart={resetQuiz}
-          onBackToHome={() => navigate("/home")}
           targetWords={targetWords}
           setTargetWords={setTargetWords}
         />
@@ -82,7 +92,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ user }) => {
         {/* 戻るボタン */}
         <div className="max-w-2xl mx-auto mb-4">
           <button
-            onClick={() => navigate("/home")}
+            onClick={() => navigate("/quizSetting")}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
           >
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -92,7 +102,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ user }) => {
                 clipRule="evenodd"
               />
             </svg>
-            ホームに戻る
+            クイズの設定に戻る
           </button>
         </div>
 
@@ -106,6 +116,8 @@ export const QuizPage: React.FC<QuizPageProps> = ({ user }) => {
           onPlayAudio={isAudioMode ? playQuestionAudio : undefined}
           onCheckAnswer={checkUserAnswer}
           onAddJpToEnWord={addJpToEnWord}
+          resisterWordWeakness={resisterWordWeakness}
+          userQuizData={userQuizData}
         />
       </div>
     );
@@ -117,10 +129,10 @@ export const QuizPage: React.FC<QuizPageProps> = ({ user }) => {
       <div className="text-center">
         <p className="text-xl text-gray-600 mb-4">クイズデータの読み込み中...</p>
         <button
-          onClick={() => navigate("/home")}
+          onClick={() => navigate("/quizSetting")}
           className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
         >
-          ホームに戻る
+          クイズの設定に戻る
         </button>
       </div>
     </div>

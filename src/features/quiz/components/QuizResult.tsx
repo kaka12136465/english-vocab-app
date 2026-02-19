@@ -2,12 +2,12 @@ import React from 'react';
 import { QuizAnswer } from '../types/quiz.types';
 import { QuizSummary } from '../services/quizService';
 import { Word } from '@/types';
+import { useNavigate } from 'react-router-dom';
 
 interface QuizResultProps {
   summary: QuizSummary;
   answers: QuizAnswer[];
   onRestart: (words: Word[]) => void;
-  onBackToHome: () => void;
   targetWords: Word[];
   setTargetWords: (words: Word[]) => void;
 }
@@ -16,7 +16,6 @@ export const QuizResult: React.FC<QuizResultProps> = ({
   summary,
   answers,
   onRestart,
-  onBackToHome,
   targetWords,
   setTargetWords,
 }) => {
@@ -33,6 +32,8 @@ export const QuizResult: React.FC<QuizResultProps> = ({
     if (accuracy >= 40) return 'もう少し頑張りましょう！';
     return '復習が必要です';
   };
+
+  const navigate = useNavigate();
 
   return (
     <div className="w-full max-w-3xl mx-auto p-6 bg-white rounded-lg shadow-md">
@@ -130,10 +131,10 @@ export const QuizResult: React.FC<QuizResultProps> = ({
           復習する
         </button>
         <button
-          onClick={onBackToHome}
+          onClick={() => navigate("/quizSetting")}
           className="flex-1 py-3 px-4 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2 transition-colors"
         >
-          ホームに戻る
+          クイズの設定に戻る
         </button>
       </div>
     </div>

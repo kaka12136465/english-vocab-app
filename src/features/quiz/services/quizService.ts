@@ -1,8 +1,8 @@
 import { Word } from '@/types';
-import { QuizMode, QuizQuestionData, QuizSetting, UserQuizData } from '../types/quiz.types';
+import { emptyUserQuizData, QuizMode, QuizQuestionData, QuizSetting, UserQuizData } from '../types/quiz.types';
 import { requestGemini } from '@/lib/geminiRequestService';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 /**
  * クイズの問題文を生成
@@ -124,16 +124,24 @@ export const calculateQuizSummary = (
 };
 
 export const updateLastPlayQuizSettingOfUser = async (userId: string, quizSetting: QuizSetting) => {
-  const docRef = doc(db, "userDatas", userId);
+  const docRef = doc(db, "userQuizDatas", userId);
   await updateDoc(docRef, {lastPlayQuizSetting: quizSetting});
 }
 
-export const resisterWordWeaknessForUser = async (userId: string, wordId: string, isWeak: boolean) => {
-
+export const updateWordWeaknessForUser = async (userQuizData: UserQuizData, wordId: string, isWeak: boolean) => {
+  const docRef = doc(db, "userQuizDatas", userQuizData.userId);
+  await updateDoc(docRef, {
+    [`wordWeaknesses.${wordId}`]: isWeak,
+  });
 }
 
 export const fetchUserQuizData = async (userId: string): Promise<UserQuizData> => {
-  const docRef = doc(db, "userDatas", userId);
+  const docRef = doc(db, "userQuizDatas", userId);
   const userQuizData = (await getDoc(docRef)).data();
   return userQuizData as UserQuizData;
+}
+
+export const resisterNewUserQuizData = async (userId: string): Promise<void> => {
+  const docRef = doc(db, "userQuizDatas", userId);
+  await setDoc(docRef, {...emptyUserQuizData, userId: userId});
 }
