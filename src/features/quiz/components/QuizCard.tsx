@@ -12,7 +12,7 @@ interface QuizCardProps {
   onPlayAudio?: () => void;
   onCheckAnswer: () => Promise<boolean>;
   onAddJpToEnWord: (word: Word, japanese:string) => Promise<void>;
-  resisterWordWeakness: (wordId:string, isWeak: boolean) => Promise<void>;
+  resisterWordWeakness: (word:Word, isWeak: boolean) => Promise<void>;
   userQuizData: UserQuizData;
 }
 
@@ -43,8 +43,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
     setUserAnswer('');
     setIsSubmitted(false);
     setIsCorrect(null);
-    setIsWeak(userQuizData.wordWeaknesses[question.word.id] ?? false)
-    console.log(question.word.english, userQuizData.wordWeaknesses[question.word.id])
+    setIsWeak(userQuizData.wordWeaknesses[question.word.id] ?? false);
   }, [question]);
 
   useEffect(() => {
@@ -67,6 +66,10 @@ export const QuizCard: React.FC<QuizCardProps> = ({
     setIsCheckButtonClicked(false);
     try {
       const correct = await onSubmit(userAnswer);
+      if(userQuizData.wordWeaknesses[question.word.id] == undefined){
+        resisterWordWeakness(question.word, !correct);
+        setIsWeak(!correct);
+      }
       setIsCorrect(correct);
       setIsSubmitted(true);
     } catch (error) {
@@ -231,15 +234,18 @@ export const QuizCard: React.FC<QuizCardProps> = ({
                 isCorrect && isCheckButtonClicked && isAddJpButtonClicked &&
                 <p className="text-sm text-gray-700 mt-1">追加完了</p>
               }
-              <input
-                type="checkbox"
-                checked={isWeak}
-                onChange={async (e) => {
-                  setIsWeak(e.target.checked);
-                  resisterWordWeakness(question.word.id, e.target.checked);
-                }}
-              />
-            </div>
+              <div className="flex ml-auto"/>
+                <p className="font-normal text-sm text-gray-700">苦手</p>
+                <input
+                  type="checkbox"
+                  checked={isWeak}
+                  onChange={async (e) => {
+                    setIsWeak(e.target.checked);
+                    resisterWordWeakness(question.word, e.target.checked);
+                  }}
+                  className="size-4"
+                />
+              </div>
             
             <div className="flex items-center gap-3">
               <div className="text-sm text-gray-700 mt-1">

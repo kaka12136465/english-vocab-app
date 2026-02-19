@@ -25,7 +25,7 @@ interface useQuizReturnProps{
   getQuizSummary: () => quizService.QuizSummary;
   checkUserAnswer: () => Promise<boolean>;
   addJpToEnWord: (word: Word, japanese: string) => Promise<void>;
-  resisterWordWeakness: (wordId: string, isWeak: boolean) => Promise<void>; 
+  resisterWordWeakness: (word: Word, isWeak: boolean) => Promise<void>; 
 }
 
 /**
@@ -202,9 +202,9 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userQuizDat
     await updateWord(word.id, {...word, japanese:word.japanese.concat([japanese])});
   }, [quizState.answers])
 
-  const resisterWordWeakness = useCallback(async (wordId:string, isWeak: boolean) => {
-    await quizService.updateWordWeaknessForUser(userQuizData, wordId, isWeak);
-    setUserQuizData({...userQuizData, wordWeaknesses: {...userQuizData.wordWeaknesses, [wordId]: isWeak}});
+  const resisterWordWeakness = useCallback(async (word:Word, isWeak: boolean) => {
+    await quizService.updateWordWeaknessForUser(userQuizData, word, isWeak);
+    setUserQuizData({...userQuizData, wordWeaknesses: {...userQuizData.wordWeaknesses, [word.id]: isWeak}});
   }, [userQuizData, setUserQuizData])
 
   return {

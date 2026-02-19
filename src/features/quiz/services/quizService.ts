@@ -128,11 +128,12 @@ export const updateLastPlayQuizSettingOfUser = async (userId: string, quizSettin
   await updateDoc(docRef, {lastPlayQuizSetting: quizSetting});
 }
 
-export const updateWordWeaknessForUser = async (userQuizData: UserQuizData, wordId: string, isWeak: boolean) => {
+export const updateWordWeaknessForUser = async (userQuizData: UserQuizData, word: Word, isWeak: boolean) => {
   const docRef = doc(db, "userQuizDatas", userQuizData.userId);
   await updateDoc(docRef, {
-    [`wordWeaknesses.${wordId}`]: isWeak,
+    [`wordWeaknesses.${word.id}`]: isWeak,
   });
+  console.log("登録", word.english, isWeak);
 }
 
 export const fetchUserQuizData = async (userId: string): Promise<UserQuizData> => {

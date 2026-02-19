@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react';
 import { AuthPage } from './features/auth/components/AuthPage';
 import { HomePage } from './components/HomePage';
-import { QuizPage } from './components/QuizPage';
+import { QuizPage } from './features/quiz/components/QuizPage';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { getAuth, User } from 'firebase/auth';
 import { Header } from './components/Header';
 import app, { auth } from './lib/firebase';
 import { useAuth } from './features/auth/hooks/useAuth';
-import { WordBooksPage } from './components/BookshelfPage';
-import { WordsPage } from './components/WordsPage';
-import { QuizSettingPage } from './components/QuizSettingPage';
+import { WordBooksPage } from './features/vocabulary/components/BookshelfPage';
+import { WordsPage } from './features/vocabulary/components/WordsPage';
+import { QuizSettingPage } from './features/quiz/components/QuizSettingPage';
 
 function App() {
   const [user, setUser] = useState<User | null>(auth.currentUser);
