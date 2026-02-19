@@ -3,18 +3,20 @@ import {
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
   onAuthStateChanged,
-  User as FirebaseUser,
+  User,
 } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
-import { UserData } from '@/types';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth } from '@/lib/firebase';
+import { DataForLogin, DataForSignup } from '../types/auth.types';
 
 /**
  * メールアドレスとパスワードでユーザーを登録
  */
-export const signUp = async (email: string, password: string): Promise<FirebaseUser> => {
+export const signup = async (data: DataForSignup): Promise<User> => {
   try {
-    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    if(data.password != data.confirmPassword){
+      throw new Error("パスワードと確認用パスワードが異なります");
+    }
+    const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
     return userCredential.user;
   } catch (error: any) {
     throw new Error(getAuthErrorMessage(error.code));
@@ -24,9 +26,9 @@ export const signUp = async (email: string, password: string): Promise<FirebaseU
 /**
  * メールアドレスとパスワードでログイン
  */
-export const signIn = async (email: string, password: string): Promise<FirebaseUser> => {
+export const login = async (data: DataForLogin): Promise<User> => {
   try {
-    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
     return userCredential.user;
   } catch (error: any) {
     throw new Error(getAuthErrorMessage(error.code));
@@ -36,7 +38,7 @@ export const signIn = async (email: string, password: string): Promise<FirebaseU
 /**
  * ログアウト
  */
-export const signOut = async (): Promise<void> => {
+export const logout = async (): Promise<void> => {
   try {
     await firebaseSignOut(auth);
   } catch (error: any) {
@@ -47,44 +49,9 @@ export const signOut = async (): Promise<void> => {
 /**
  * 認証状態の変更を監視
  */
-export const onAuthStateChange = (callback: (user: FirebaseUser | null) => void) => {
+export const onAuthStateChange = (callback: (user: User | null) => void) => {
   return onAuthStateChanged(auth, callback);
 };
-
-/**
- * ユーザーデータを新規追加
- */
-export const resisterNewUserData = async (userId: string): Promise<UserData> => {
-  const newUserData: UserData ={
-    userId: userId,
-    lastPlayQuizSetting: {
-      quizMode: 'english-to-japanese',
-      wordBookId: '',
-      quizRange: [1,100],
-      numberOfQuiz: 10,
-    },
-    weakWordIds: [],
-    notWeakWordIds: []
-  }
-  await setDoc(doc(db, 'userDatas', userId), 
-    newUserData
-  );
-  return newUserData;
-}
-
-/**
- * ユーザーデータを取得
- */
-export const fetchUserData = async (userId: string): Promise<UserData | null> => {
-  const docRef = doc(db, "userDatas", userId);
-  const docSnap = await getDoc(docRef);
-  if(docSnap.exists()){
-    const userData = docSnap.data();
-    return userData as UserData;
-  }else{
-    return null
-  }
-}
 
 /**
  * Firebase Auth のエラーコードを日本語メッセージに変換

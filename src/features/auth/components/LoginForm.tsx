@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { LoginFormData } from '../types/auth.types';
+import { DataForLogin } from '../types/auth.types';
 
 interface LoginFormProps {
-  onSubmit: (data: LoginFormData) => Promise<void>;
+  onSubmit: (data: DataForLogin) => Promise<void>;
   onSwitchToSignup: () => void;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSubmit, onSwitchToSignup }) => {
-  const [formData, setFormData] = useState<LoginFormData>({
+  const [formData, setFormData] = useState<DataForLogin>({
     email: '',
     password: '',
   });

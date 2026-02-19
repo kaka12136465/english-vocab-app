@@ -2,22 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { AddWordBookForm } from '@/features/vocabulary/components/AddWordBookForm';
 import { useWordBook } from '@/features/vocabulary/hooks/useBookshelf';
 import { WordBookCard } from '@/features/vocabulary/components/WordBookCard';
+import { User } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
 
 interface WordBooksPageProps {
-  userId: string;
-  onBack: () => void;
-  onOpenWords: (wordBookId:string) => void;
+  user: User | null;
 }
 
-export const WordBooksPage: React.FC<WordBooksPageProps> = ({onBack, onOpenWords }) => {
+export const WordBooksPage: React.FC<WordBooksPageProps> = ({user}) => {
   const { wordBooks, loading, error, loadAllWordBooks } = useWordBook();
   const [showAddForm, setShowAddForm] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadAllWordBooks();
   }, []);
-
-
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 pt-16">
@@ -26,7 +25,7 @@ export const WordBooksPage: React.FC<WordBooksPageProps> = ({onBack, onOpenWords
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             <button
-              onClick={onBack}
+              onClick={() => navigate(-1)}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -76,6 +75,7 @@ export const WordBooksPage: React.FC<WordBooksPageProps> = ({onBack, onOpenWords
             <AddWordBookForm
               onCreated={() => setShowAddForm(false)}
               onCancel={() => setShowAddForm(false)}
+              user={user}
             />
           </div>
         )}
@@ -119,7 +119,7 @@ export const WordBooksPage: React.FC<WordBooksPageProps> = ({onBack, onOpenWords
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {wordBooks.map((wordBook) => (
-                <WordBookCard key={wordBook.id} wordBook={wordBook} onOpenWords={onOpenWords} />
+                <WordBookCard key={wordBook.id} wordBook={wordBook} />
               ))}
             </div>
           </div>

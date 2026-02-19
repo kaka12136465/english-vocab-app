@@ -1,21 +1,24 @@
 import { WordBook } from "@/types";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 // 単語カードコンポーネント
 interface WordBookCardProps {
   wordBook: WordBook;
-  onOpenWords: (wordBookId: string) => void;
 }
 
-export const WordBookCard: React.FC<WordBookCardProps> = ({ wordBook, onOpenWords }) => {
+export const WordBookCard: React.FC<WordBookCardProps> = ({ wordBook }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow">
       <div className="flex justify-between items-center">
         <button
             className="text-xl font-bold text-gray-800 flex-1 text-left"
-            onClick={() => onOpenWords(wordBook.id)}
+            onClick={() => {
+              navigate("words", {state: {wordBookId: wordBook.id}});
+            }}
         >
             {wordBook.name}
         </button>

@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { SignupFormData } from '../types/auth.types';
+import { DataForSignup } from '../types/auth.types';
 
 interface SignupFormProps {
-  onSubmit: (email: string, password: string) => Promise<void>;
+  onSubmit: (data: DataForSignup) => Promise<void>;
   onSwitchToLogin: () => void;
 }
 
 export const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, onSwitchToLogin }) => {
-  const [formData, setFormData] = useState<SignupFormData>({
+  const [signupFormData, setSignupFormData] = useState<DataForSignup>({
     email: '',
     password: '',
     confirmPassword: '',
@@ -17,22 +17,22 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, onSwitchToLogi
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setSignupFormData(prev => ({ ...prev, [name]: value }));
     setError('');
   };
 
   const validateForm = (): boolean => {
-    if (!formData.email || !formData.password || !formData.confirmPassword) {
+    if (!signupFormData.email || !signupFormData.password || !signupFormData.confirmPassword) {
       setError('全ての項目を入力してください');
       return false;
     }
 
-    if (formData.password.length < 6) {
+    if (signupFormData.password.length < 6) {
       setError('パスワードは6文字以上で設定してください');
       return false;
     }
 
-    if (formData.password !== formData.confirmPassword) {
+    if (signupFormData.password !== signupFormData.confirmPassword) {
       setError('パスワードが一致しません');
       return false;
     }
@@ -49,7 +49,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, onSwitchToLogi
 
     setLoading(true);
     try {
-      await onSubmit(formData.email, formData.password);
+      await onSubmit(signupFormData);
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -76,7 +76,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, onSwitchToLogi
             type="email"
             id="email"
             name="email"
-            value={formData.email}
+            value={signupFormData.email}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="example@email.com"
@@ -92,7 +92,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, onSwitchToLogi
             type="password"
             id="password"
             name="password"
-            value={formData.password}
+            value={signupFormData.password}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="6文字以上"
@@ -108,7 +108,7 @@ export const SignupForm: React.FC<SignupFormProps> = ({ onSubmit, onSwitchToLogi
             type="password"
             id="confirmPassword"
             name="confirmPassword"
-            value={formData.confirmPassword}
+            value={signupFormData.confirmPassword}
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="もう一度入力してください"

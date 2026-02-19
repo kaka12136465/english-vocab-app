@@ -1,15 +1,26 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { LoginForm } from '@/features/auth/components/LoginForm';
 import { SignupForm } from '@/features/auth/components/SignupForm';
-import { LoginFormData } from '@/features/auth/types/auth.types';
+import { User } from 'firebase/auth';
+import { useNavigate } from 'react-router-dom';
+import { DataForLogin, DataForSignup } from '../types/auth.types';
 
 interface AuthPageProps {
-  onLogin: (data: LoginFormData) => Promise<void>;
-  onSignup: (email: string, password: string) => Promise<void>;
+  user: User | null;
+  signup: (data: DataForSignup) => Promise<void>;
+  login: (data: DataForLogin) => Promise<void>;
 }
 
-export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onSignup }) => {
-  const [isLogin, setIsLogin] = useState(true);
+export const AuthPage: React.FC<AuthPageProps> = ({user, signup, login}) => {
+  const [isLogin, setIsLogin] = useState(user !== null);
+  
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if(user){
+      navigate("/home");
+    }
+  }, [user])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center px-4 py-12">
@@ -27,12 +38,12 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin, onSignup }) => {
         {/* フォーム */}
         {isLogin ? (
           <LoginForm
-            onSubmit={onLogin}
+            onSubmit={login}
             onSwitchToSignup={() => setIsLogin(false)}
           />
         ) : (
           <SignupForm
-            onSubmit={onSignup}
+            onSubmit={signup}
             onSwitchToLogin={() => setIsLogin(true)}
           />
         )}

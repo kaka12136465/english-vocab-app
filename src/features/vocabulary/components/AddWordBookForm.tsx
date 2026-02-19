@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/features/auth/hooks/useAuth';
 import * as vocabularyService from '../services/vocabularyService';
+import { User } from 'firebase/auth';
 
 interface AddWordBookFormProps {
   onCreated?: (id: string) => void;
   onCancel: () => void;
+  user: User | null;
 }
 
-export const AddWordBookForm: React.FC<AddWordBookFormProps> = ({ onCreated, onCancel }) => {
-  const { user } = useAuth();
+export const AddWordBookForm: React.FC<AddWordBookFormProps> = ({ onCreated, onCancel, user }) => {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [loading, setLoading] = useState(false);

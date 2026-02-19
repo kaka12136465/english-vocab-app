@@ -1,43 +1,24 @@
 import { useState, useEffect } from 'react';
-import { AuthState, mapFirebaseUser } from '../types/auth.types';
+import { AuthState, DataForLogin, DataForSignup } from '../types/auth.types';
 import * as authService from '../services/authService';
-import { fetchUserData, resisterNewUserData } from '../services/authService';
-import { UserData } from '@/types';
+import { User } from 'firebase/auth';
 
 /**
  * 認証状態を管理するカスタムフック
  */
-export const useAuth = () => {
-    const emptyUserData: UserData ={
-    userId: "",
-    lastPlayQuizSetting: {
-      quizMode: 'english-to-japanese',
-      wordBookId: '',
-      quizRange: [0,0],
-      numberOfQuiz: 0
-    },
-    weakWordIds: [],
-    notWeakWordIds: []
-  }
-
+export const useAuth = (user: User | null, setUser: (user:User | null) => void) => {
   const [authState, setAuthState] = useState<AuthState>({
-    user: null,
-    userData: emptyUserData,
+    user: user,
     loading: true,
     error: null,
   });
 
   useEffect(() => {
     // 認証状態の変更を監視
-    const unsubscribe = authService.onAuthStateChange(async (firebaseUser) => {
-      const user = mapFirebaseUser(firebaseUser);
-      let userData = user ? await fetchUserData(user.uid) : null;
-      if(!userData && user){
-        userData = await resisterNewUserData(user.uid);
-      }
+    const unsubscribe = authService.onAuthStateChange((user: User | null) => {
+      setUser(user);
       setAuthState({
         user: user,
-        userData: userData,
         loading: false,
         error: null,
       });
@@ -45,15 +26,15 @@ export const useAuth = () => {
 
     // クリーンアップ
     return () => unsubscribe();
-  }, []);
+  }, [setUser]);
 
   /**
    * サインアップ
    */
-  const signUp = async (email: string, password: string): Promise<void> => {
+  const signup = async (data: DataForSignup): Promise<void> => {
     try {
       setAuthState(prev => ({ ...prev, loading: true, error: null }));
-      await authService.signUp(email, password);
+      await authService.signup(data);
     } catch (error: any) {
       setAuthState(prev => ({
         ...prev,
@@ -65,12 +46,12 @@ export const useAuth = () => {
   };
 
   /**
-   * サインイン
+   * ログイン
    */
-  const signIn = async (email: string, password: string): Promise<void> => {
+  const login = async (data: DataForLogin): Promise<void> => {
     try {
       setAuthState(prev => ({ ...prev, loading: true, error: null }));
-      await authService.signIn(email, password);
+      await authService.login(data);
     } catch (error: any) {
       setAuthState(prev => ({
         ...prev,
@@ -82,12 +63,12 @@ export const useAuth = () => {
   };
 
   /**
-   * サインアウト
+   * ログアウト
    */
-  const signOut = async (): Promise<void> => {
+  const logout = async (): Promise<void> => {
     try {
       setAuthState(prev => ({ ...prev, loading: true, error: null }));
-      await authService.signOut();
+      authService.logout();
     } catch (error: any) {
       setAuthState(prev => ({
         ...prev,
@@ -101,12 +82,9 @@ export const useAuth = () => {
 
 
   return {
-    user: authState.user,
-    userData: authState.userData ?? emptyUserData,
-    loading: authState.loading,
-    error: authState.error,
-    signUp,
-    signIn,
-    signOut,
+    signup,
+    login,
+    logout,
+    authState
   };
 };

@@ -16,19 +16,7 @@ export interface Word {
   description: string; // 単語の補足説明
 }
 
-export interface QuizSetting{
-  quizMode: QuizMode; // クイズモード(英->和, 和->英, 音声->和)
-  wordBookId: string; // 単語帳のID
-  quizRange: [number, number]; // クイズの出題範囲(単語番号quizRange[0]~quizRange[1]の出題範囲)
-  numberOfQuiz: number; // クイズの数
-}
 
-export interface UserData {
-  userId: string; // ユーザーID
-  lastPlayQuizSetting: QuizSetting; // 前回このユーザが行ったクイズの設定
-  weakWordIds: string[]; // 苦手単語のIDリスト
-  notWeakWordIds: string[]; // 苦手ではない単語のIDリスト(登録外の単語は未学習単語)
-}
 
 // 単語帳データ型
 export interface WordBook {
@@ -54,28 +42,4 @@ export interface UserProgress {
 // 進捗ステータス
 export type ProgressStatus = 'weak' | 'normal' | 'strong';
 
-// クイズの種類
-export type QuizMode = 'english-to-japanese' | 'japanese-to-english' | 'audio-to-japanese';
 
-// クイズ問題データ型
-export interface QuizQuestion {
-  word: Word;
-  mode: QuizMode;
-}
-
-// クイズ結果データ型
-export interface QuizResult {
-  wordId: string;
-  isCorrect: boolean;
-  userAnswer: string;
-  correctAnswer: string;
-  mode: QuizMode;
-}
-
-// クイズセッションデータ型
-export interface QuizSession {
-  questions: QuizQuestion[];
-  currentIndex: number;
-  results: QuizResult[];
-  startedAt: Date;
-}

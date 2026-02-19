@@ -16,9 +16,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 // Firebase サービスのインスタンスをエクスポート
+await getAuth(app).authStateReady();
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
+export const user = auth.currentUser;
 
 // デフォルトエクスポート
 export default app;

@@ -6,13 +6,14 @@ import { WordCard } from '@/features/vocabulary/components/WordCard';
 import { deleteWord } from '@/features/vocabulary/services/vocabularyService';
 import { EditWordForm } from '@/features/vocabulary/components/EditWordForm';
 import { Word } from '@/types';
+import { User } from 'firebase/auth';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface WordsPageProps {
-  wordBookId: string;
-  onBack: () => void;
+  user: User | null;
 }
 
-export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
+export const WordsPage: React.FC<WordsPageProps> = ({ user }) => {
   type SortOption = 'createdAtDesc' | 'createdAtAsc' | 'englishAsc' | 'englishDesc' | "indexAsc" | "indexDesc";
   const sortOptions: { value: SortOption; label: string }[] = [
     { value: 'createdAtDesc', label: '作成日昇順' },
@@ -23,6 +24,8 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
     { value: 'indexDesc', label: '番号降順' },
   ];
 
+  const location = useLocation();
+  const {wordBookId} = location.state ?? {wordBookId: ""};
   const { words, error, loadWordsInWordBook, addWord, updateWordInWordBook } = useVocabulary(wordBookId);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
@@ -30,6 +33,7 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
   const [selectedSortOption, setSelectedSortOption] = useState<SortOption>("createdAtDesc");
   const [sortedWords, setSortedWords] = useState<Word[]>([]);
   const [wordsCnt, setWordsCnt] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     setWordsCnt(words.length);
@@ -68,10 +72,6 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
 
   const handleAddWord = async (formData: AddWordFormData) => {
     const success = await addWord(formData);
-    /* このコードを有効にすると、単語追加後にフォームを閉じる
-    if (success) {
-      setShowAddForm(false);
-    }*/
     return success;
   };
 
@@ -98,7 +98,7 @@ export const WordsPage: React.FC<WordsPageProps> = ({ wordBookId, onBack }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-4">
             <button
-              onClick={onBack}
+              onClick={() => navigate(-1)}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">

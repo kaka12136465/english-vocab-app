@@ -1,41 +1,21 @@
-import { UserData } from '@/types';
-import { User as FirebaseUser } from 'firebase/auth';
-
-// ユーザー型
-export interface User {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-}
+import { User } from 'firebase/auth';
 
 // 認証状態の型
 export interface AuthState {
   user: User | null;
-  userData: UserData | null;
   loading: boolean;
   error: string | null;
 }
 
 // ログインフォームの型
-export interface LoginFormData {
+export interface DataForLogin {
   email: string;
   password: string;
 }
 
 // サインアップフォームの型
-export interface SignupFormData {
+export interface DataForSignup {
   email: string;
   password: string;
   confirmPassword: string;
 }
-
-// Firebase User を アプリ用 User に変換
-export const mapFirebaseUser = (firebaseUser: FirebaseUser | null): User | null => {
-  if (!firebaseUser) return null;
-  
-  return {
-    uid: firebaseUser.uid,
-    email: firebaseUser.email,
-    displayName: firebaseUser.displayName,
-  };
-};
