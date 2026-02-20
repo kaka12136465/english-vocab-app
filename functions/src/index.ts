@@ -12,6 +12,10 @@ export const useGemini = onRequest(async (req, res) => {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-lite",
       contents: prompt,
+      config: {
+        temperature: 0.1,
+        maxOutputTokens: 1000,
+      }
     });
 
     // レスポンスを返す
@@ -42,6 +46,10 @@ export const testGemini = onRequest(async (req, res) => {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-lite",
       contents: prompt,
+      config: {
+        temperature: 0.7,
+        maxOutputTokens: 1000,
+      }
     });
 
     // レスポンスを返す
