@@ -72,9 +72,10 @@ export const QuizSettingPage: React.FC<QuizSettingPageProps> = ({user}) => {
 
 	useEffect(() => {
 		let range = quizSetting.quizRange;
-		if(range[0] > 0){setQuizRange([range[0].toString(), quizRange[1]]);}
-		if(range[1] > 0){setQuizRange([quizRange[0], range[1].toString()]);}
-		
+		let qRange:[string, string] = [range[0].toString(), range[1].toString()];
+		if(range[0] <= 0){qRange[0] = quizRange[0];}
+		if(range[1] <= 0){qRange[1] = quizRange[1];}
+		setQuizRange(qRange);
 		if(quizSetting.wordBookId === ""){
 			const wordBookId = Object.keys(wordBooksDict)[0];
 			setQuizSetting({...quizSetting, wordBookId: wordBookId});
