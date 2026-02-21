@@ -4,18 +4,30 @@ import * as logger from "firebase-functions/logger";
 
 // function/.envのGEMINI_API_KEY="APIKEY"からAPIキーを取得
 export const useGemini = onRequest(async (req, res) => {
+  // CORSヘッダーはtryブロックの外で最初に設定する
+  res.set("Access-Control-Allow-Origin", "https://englishwordlearning-d636b.web.app");
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // OPTIONSリクエスト（プリフライト）には204を返して終了
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
+    return;
+  }
+
   try {
-    res.set("Access-Control-Allow-Origin", "https://englishwordlearning-d636b.web.app");
-    res.set("Access-Control-Allow-Methods", "POST");
     const ai = new GoogleGenAI({});
-    const prompt = req.body;
+    const body = req.body;
+    const prompt = body.prompt;
+    const temperature = body.temperature || 0.1; // デフォルトは0.1
+    const maxOutputTokens = body.maxOutputTokens || 1000; // デフォルトは1000
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-lite",
       contents: prompt,
       config: {
-        temperature: 0.1,
-        maxOutputTokens: 1000,
-      }
+        temperature: temperature,
+        maxOutputTokens: maxOutputTokens,
+      },
     });
 
     // レスポンスを返す
@@ -36,20 +48,31 @@ export const useGemini = onRequest(async (req, res) => {
 
 // テスト環境用
 export const testGemini = onRequest(async (req, res) => {
-  try {
-    // ローカルのフロントエンドからのリクエストを許可
-    res.set("Access-Control-Allow-Origin", "http://localhost:5173");
+  // CORSヘッダーはtryブロックの外で最初に設定する
+  res.set("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
-    res.set("Access-Control-Allow-Methods", "POST");
+  // OPTIONSリクエスト（プリフライト）には204を返して終了
+  if (req.method === "OPTIONS") {
+    res.status(204).send("");
+    return;
+  }
+
+  try {
     const ai = new GoogleGenAI({});
-    const prompt = req.body;
+    const body = req.body;
+    console.log("Geminiリクエストの受信:", body);
+    const prompt = body.prompt;
+    const temperature = body.temperature || 0.1; // デフォルトは0.1
+    const maxOutputTokens = body.maxOutputTokens || 1000; // デフォルトは1000
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-lite",
       contents: prompt,
       config: {
-        temperature: 0.7,
-        maxOutputTokens: 1000,
-      }
+        temperature: temperature,
+        maxOutputTokens: maxOutputTokens,
+      },
     });
 
     // レスポンスを返す

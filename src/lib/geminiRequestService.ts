@@ -1,10 +1,25 @@
-export const requestGemini = async (prompt: string): Promise<string> => {
+/**
+ * 
+ * @param prompt AIに送るプロンプト
+ * @param temperature AIのランダム性を制御するパラメータ。値が高いほどランダムな応答になります。デフォルトは0.1です。
+ * @param maxOutputTokens AIが生成する最大トークン数。デフォルトは1000です。
+ * @returns 
+ */
+export const requestGemini = async (prompt: string, temperature?: number, maxOutputTokens?: number): Promise<string> => {
   try{
+    const requestBody = JSON.stringify({
+          prompt: prompt,
+          temperature: temperature,
+          maxOutputTokens: maxOutputTokens
+        });
     const response = await fetch(
       "https://us-central1-englishwordlearning-d636b.cloudfunctions.net/useGemini",
       {
         method: "POST",
-        body: prompt,
+        body: requestBody,
+        headers: {
+          "Content-Type": "application/json",
+        },
       }
     );
     if(!response.ok){
@@ -19,6 +34,8 @@ export const requestGemini = async (prompt: string): Promise<string> => {
       console.error(jsonData);
       throw new Error("AIへのリクエスト失敗");
     }
+
+    console.log(requestBody, jsonData);
 
     const resultText = jsonData.geminiResponse.candidates[0].content.parts[0].text;
     return resultText;
