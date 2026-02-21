@@ -34,7 +34,18 @@ export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord, setShowA
               <p className="flex-1 text-gray-800">{word.japanese.join(', ')}</p>
             </div>
             {word.pronunciation && (
-              <p className="text-sm text-gray-500">[{word.pronunciation}]</p>
+              <div className="">
+                <p className="text-sm text-gray-500">[{word.pronunciation}]</p>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    console.log("音声");
+                    const utterance = new SpeechSynthesisUtterance(word.english);
+                    utterance.lang = "en-US";
+                    speechSynthesis.speak(utterance);
+                  }} 
+                >再生</button>
+              </div>
             )}
             {word.synonyms.length > 0 && (
               <div>
