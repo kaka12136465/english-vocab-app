@@ -1,4 +1,5 @@
-import { requestGemini } from "@/lib/geminiRequestService";
+import { requestGemini } from "@/shared/ai/services/geminiRequestService";
+import { REQUEST_WORD_INFO_PROMPT } from "@/shared/ai/promps/vocabraryPrompts";
 
 // wordScrapingService.ts
 interface ScrapingWordData {
@@ -82,28 +83,16 @@ export async function scrapeWord(word: string): Promise<ScrapingWordData> {
   };
 }
 
-export const translateEnToJp = async (enWord: string): Promise<string> => {
+export const fetchWordInfo = async (enWord: string): Promise<string> => {
   try{
     if(enWord.length > 100){
       throw new Error("入力が長すぎます。100文字以下にしてください。");
     }
-    const prompt = enWord + "のすべての和訳のみを単語を囲わずカンマ区切りで3つ"
+    const prompt = REQUEST_WORD_INFO_PROMPT(enWord);
+    console.log(prompt);
     return requestGemini(prompt);
   }catch(err){
     console.error(err);
     throw new Error(enWord + "の日本語への翻訳に失敗しました");
-  }
-}
-
-export const translateEnToJpIfNotFound = async (idiom: string): Promise<string> => {
-  try{
-    if(idiom.length > 100){
-      throw new Error("入力が長すぎます。100文字以下にしてください。");
-    }
-    const prompt = "「" + idiom + '」について、{"japanese": [日本語訳3つを含めた配列], synonyms: [すべての類義語を英語で表した配列], antonyms: [すべての対義語を英語で表した配列], exampleSentence: "例文", pronunciation: "発音記号"}をこの形式で、これのみ出力して'
-    return requestGemini(prompt);
-  }catch(err){
-    console.error(err);
-    throw new Error(idiom + "の日本語への翻訳に失敗しました");
   }
 }

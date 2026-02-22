@@ -1,19 +1,39 @@
 import { Timestamp } from "firebase/firestore";
 
-// 基本的な単語データ型
-export interface Word {
-  id: string;
+
+// 単語追加フォームのデータ
+export interface AddWordFormData {
   english: string;
   japanese: string[];
   synonyms: string[];
   antonyms: string[];
-  exampleSentence: string;
-  pronunciation: string; // 発音
+  exampleEnSentence: string;
+  exampleJaSentence: string;
+  partOfSpeech: string[];
+  pronunciation: string;
+  index: number;
+  description: string;
+}
+
+export const defaultAddWordFormData: AddWordFormData = {
+    english: '',
+    japanese: [''],
+    synonyms: [],
+    antonyms: [],
+    exampleEnSentence: '',
+    exampleJaSentence: '',
+    partOfSpeech: [],
+    pronunciation: '',
+    index: 0,
+    description: ''
+  };
+
+// 基本的な単語データ型
+export interface Word extends AddWordFormData {
+  id: string;
   audioUrl: string;
   createdAt?: Timestamp; // 作成日時（オプション）
   wordBookId: string; // この単語を所有している単語帳のID
-  index: number; // インデックス
-  description: string; // 単語の補足説明
 }
 
 

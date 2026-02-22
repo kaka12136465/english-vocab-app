@@ -1,17 +1,5 @@
-import { Word } from '@/types';
+import { AddWordFormData, Word } from '@/types';
 import { Timestamp } from 'firebase/firestore';
-
-// 単語追加フォームのデータ
-export interface AddWordFormData {
-  english: string;
-  japanese: string[];
-  synonyms: string[];
-  antonyms: string[];
-  exampleSentence: string;
-  pronunciation: string;
-  index: number;
-  description: string;
-}
 
 // ユーザー個別の単語（マイ単語帳）
 export interface UserWord extends Word {

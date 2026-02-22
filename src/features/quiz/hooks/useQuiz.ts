@@ -177,7 +177,7 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userQuizDat
     }
 
     // 回答が日本語化確認
-    const regex = /^[ぁ-んァ-ヶー一-龠々〆〤～]+$/;
+    const regex = /^[ぁ-んァ-ヶー一-龠々〆〤～XAB]+$/;
     if(!regex.test(latestAnswer.userAnswer)){
       console.error("回答は日本語のみである必要があります。");
       return false;

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { AddWordFormData, EditWordFormData } from '../types/vocabulary.types';
-import { scrapeWord, translateEnToJp, translateEnToJpIfNotFound } from '../services/wordSearchingService';
-import { Word } from '@/types';
+import { EditWordFormData } from '../types/vocabulary.types';
+import { fetchWordInfo } from '../services/wordSearchingService';
+import { AddWordFormData, defaultAddWordFormData, Word } from '@/types';
 
 interface EditWordFormProps {
   onSubmit: (newWord: EditWordFormData) => Promise<boolean>;
@@ -15,7 +15,9 @@ export const EditWordForm: React.FC<EditWordFormProps> = ({ onSubmit, onCancel, 
     japanese: edittingWord.japanese,
     synonyms: edittingWord.synonyms,
     antonyms: edittingWord.antonyms,
-    exampleSentence: edittingWord.exampleSentence,
+    exampleEnSentence: edittingWord.exampleEnSentence,
+    exampleJaSentence: edittingWord.exampleJaSentence,
+    partOfSpeech: edittingWord.partOfSpeech,
     pronunciation: edittingWord.pronunciation,
     index: edittingWord.index,
     description: edittingWord.description ? edittingWord.description : '',
@@ -88,16 +90,7 @@ export const EditWordForm: React.FC<EditWordFormProps> = ({ onSubmit, onCancel, 
       const success = await onSubmit(formData);
       if (success) {
         // フォームをリセット
-        setFormData({
-          english: '',
-          japanese: [''],
-          synonyms: [],
-          antonyms: [],
-          exampleSentence: '',
-          pronunciation: '',
-          index: 0,
-          description: '',
-        });
+        setFormData(defaultAddWordFormData);
       }
     } catch (err: any) {
       setError(err.message);
@@ -106,57 +99,36 @@ export const EditWordForm: React.FC<EditWordFormProps> = ({ onSubmit, onCancel, 
     }
   };
 
-  // formData.englishの類義語、対義語、例文をスクレイピングし、
-  const handleSearch: (word: string) => Promise<AddWordFormData | null> = async (word: string) => {
-      if(word.length === 0){
-        setError("英単語は必須です");
-        return null;
-      }
-      try{
-        console.log('searching "' + word + '"');
-        const scrapedData = await scrapeWord(word);
-        let newFormData: AddWordFormData;
-        if(scrapedData.isFound){
-          const japaneses:string = await translateEnToJp(word);
-          newFormData = {
-            english: scrapedData.english,
-            japanese: japaneses.split(/[,、\n]/),
-            antonyms: Array.from(scrapedData.antonyms),
-            synonyms: Array.from(scrapedData.synonyms),
-            exampleSentence: scrapedData.exampleSentence,
-            pronunciation: scrapedData.pronunciation,
-            index: formData.index,
-            description: '',
-          }
-        }else{
-          
-          const translateResponse:string = await translateEnToJpIfNotFound(word);
-          console.log("translate response", translateResponse);
-          const translateResponseMatch = translateResponse.match(/\{([^}]+)\}/);
-          if(!translateResponseMatch){
-            setError("AIから不適切なレスポンスを受け取りました");
-            return null;
-          }
-          const translateResult = JSON.parse("{" + translateResponseMatch[1] + "}");
-          newFormData = {
-            english: word,
-            japanese: translateResult.japanese?? [],
-            antonyms: translateResult.antonyms?? [],
-            synonyms: translateResult.synonyms?? [],
-            exampleSentence: translateResult.exampleSentence?? "",
-            pronunciation: translateResult.pronunciation?? "",
-            index: formData.index,
-            description: '',
-          }
-          console.log("not found", word, newFormData);
-        }
-        console.log("result", newFormData);
-        return newFormData;
-      }catch(err){
-        console.error("検索に失敗しました");
-        throw new Error();
-      }
+const handleFetchWordInfo: (word: string) => Promise<AddWordFormData | null> = async (word: string) => {
+    if(word.length === 0){
+      setError("英単語は必須です");
+      return null;
     }
+    try{
+      console.log('searching "' + word + '"');
+      const response = await fetchWordInfo(word);
+      console.log("fetchWordInfo response", response);
+      const wordInfo = JSON.parse(response);
+      const newFormData = {
+        english: word,
+        japanese: wordInfo.japanese,
+        antonyms: wordInfo.antonyms,
+        synonyms: wordInfo.synonyms,
+        exampleEnSentence: wordInfo.exampleEnSentence,
+        exampleJaSentence: wordInfo.exampleJaSentence,
+        partOfSpeech: wordInfo.partOfSpeech,
+        pronunciation: wordInfo.pronunciation,
+        index: formData.index,
+        description: '',
+      }
+      console.log("result", newFormData);
+      return newFormData;
+    }catch(err){
+      console.error("検索に失敗しました");
+      throw new Error();
+    }finally{
+    }
+  }
 
   return (
     <form onSubmit={(e) => {e.preventDefault();handleSubmit()}} className="bg-white rounded-lg shadow-md p-6">
@@ -209,7 +181,7 @@ export const EditWordForm: React.FC<EditWordFormProps> = ({ onSubmit, onCancel, 
           <button
             type='button' 
             onClick={async () => {
-              const newFormData = await handleSearch(formData.english);
+              const newFormData = await handleFetchWordInfo(formData.english);
               if(newFormData){
                 setFormData(newFormData);
               }
@@ -341,8 +313,8 @@ export const EditWordForm: React.FC<EditWordFormProps> = ({ onSubmit, onCancel, 
             例文（任意）
           </label>
           <textarea
-            value={formData.exampleSentence}
-            onChange={(e) => setFormData(prev => ({ ...prev, exampleSentence: e.target.value }))}
+            value={formData.exampleEnSentence}
+            onChange={(e) => setFormData(prev => ({ ...prev, exampleEnSentence: e.target.value }))}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
             placeholder="例: I eat an apple every day."
             rows={3}

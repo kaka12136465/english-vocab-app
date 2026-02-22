@@ -164,7 +164,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
             <input
               type="text"
               value={userAnswer}
-              onChange={(e) => setUserAnswer(e.target.value)}
+              onChange={(e) => setUserAnswer(e.target.value.replace(/〜/g, "～"))}
               className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="回答を入力してください"
               disabled={loading}
@@ -259,10 +259,10 @@ export const QuizCard: React.FC<QuizCardProps> = ({
           </div>
 
           {/* 例文表示 */}
-          {question.word.exampleSentence && (
+          {question.word.exampleEnSentence && (
             <div className="p-4 bg-gray-50 rounded-lg">
               <p className="text-sm font-medium text-gray-700 mb-1">例文:</p>
-              <p className="text-sm text-gray-600">{question.word.exampleSentence}</p>
+              <p className="text-sm text-gray-600">{question.word.exampleEnSentence}</p>
             </div>
           )}
 
