@@ -94,7 +94,7 @@ export const useQuiz: (data: useQuizProps) => useQuizReturnProps = ({userQuizDat
       throw new Error("指定された範囲に単語が存在しません");
     }
 
-    await updateLastPlayQuizSettingOfUser(userQuizData.userId, {...quizSetting, quizRange: range});
+    await updateLastPlayQuizSettingOfUser(userQuizData, {...quizSetting, quizRange: range});
     await setTargetWords(filteredWords);
     await resetQuiz(filteredWords);
   }, [quizSetting, userQuizData]);

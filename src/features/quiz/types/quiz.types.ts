@@ -1,4 +1,5 @@
 import { Word} from '@/types';
+import { Timestamp } from 'firebase/firestore';
 
 // クイズの設定
 export interface QuizConfig {
@@ -47,6 +48,8 @@ export interface QuizSetting{
 // ユーザーごとのクイズデータ
 export interface UserQuizData {
   userId: string; // ユーザーID
+  userName: string; // ユーザー名
+  lastAccessedAt: Timestamp; // 最終アクセス日時
   lastPlayQuizSetting: QuizSetting; // 前回このユーザが行ったクイズの設定
   wordWeaknesses: Record<string, boolean>; // 単語の得手不得手のリスト(登録外の単語は未学習単語)<単語ID, 
 }
@@ -62,6 +65,8 @@ export const emptyUserQuizData: UserQuizData ={
     includeWeak: true,
   },
   wordWeaknesses: {},
+  userName: "",
+  lastAccessedAt: Timestamp.now(),
 }
 
 // クイズの種類

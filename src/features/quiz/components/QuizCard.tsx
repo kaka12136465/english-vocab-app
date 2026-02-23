@@ -155,21 +155,15 @@ export const QuizCard: React.FC<QuizCardProps> = ({
             )}
 
             {/* 例文表示 */}
-            <div className="grid grid-cols-[auto_1fr] gap-x-2 px-4 py-3 bg-gray-50 rounded-lg mt-4">
+            <div className="flex flex-col justify-center gap-y-2 px-4 py-3 bg-gray-50 rounded-lg mt-4">
               
               {question.word.exampleEnSentence && (
-                <>
-                  <span className="mr-2 text-sm font-medium text-gray-700 mb-1">例文:</span>
                   <span className="text-sm text-gray-600">{question.word.exampleEnSentence}</span>
-                </>
               )}
 
               {/* 例文の日本語訳 */}
               {isSubmitted && question.word.exampleJaSentence && (
-                <>
-                  <span className="mr-2 text-sm font-medium text-gray-700 mb-1">和訳:</span>
                   <span className="text-sm text-gray-600">{question.word.exampleJaSentence}</span>
-                </>
               )}
             </div>
           </div>

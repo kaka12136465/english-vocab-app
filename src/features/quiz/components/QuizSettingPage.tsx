@@ -58,7 +58,7 @@ export const QuizSettingPage: React.FC<QuizSettingPageProps> = ({user}) => {
 			if(!user){throw new Error("ユーザー情報がありません");}
 			let userQuizData = await fetchUserQuizData(user.uid);
 			if(!userQuizData){ 
-				await resisterNewUserQuizData(user.uid);
+				await resisterNewUserQuizData(user.uid, user.displayName ?? "名無し");
 				userQuizData = {...emptyUserQuizData, userId: user.uid};
 			}
 			

@@ -2,7 +2,7 @@ import { Word } from '@/types';
 import { emptyUserQuizData, QuizMode, QuizQuestionData, QuizSetting, UserQuizData } from '../types/quiz.types';
 import { requestGemini } from '@/shared/ai/services/geminiRequestService';
 import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import { REQUEST_CHECK_ANSWER_PROMPT } from '@/shared/ai/promps/vocabraryPrompts';
 
 /**
@@ -124,9 +124,9 @@ export const calculateQuizSummary = (
 
 };
 
-export const updateLastPlayQuizSettingOfUser = async (userId: string, quizSetting: QuizSetting) => {
-  const docRef = doc(db, "userQuizDatas", userId);
-  await updateDoc(docRef, {lastPlayQuizSetting: quizSetting});
+export const updateLastPlayQuizSettingOfUser = async (user: UserQuizData, quizSetting: QuizSetting) => {
+  const docRef = doc(db, "userQuizDatas", user.userId);
+  await updateDoc(docRef, {lastPlayQuizSetting: quizSetting, lastAccessedAt: Timestamp.now()});
 }
 
 export const updateWordWeaknessForUser = async (userQuizData: UserQuizData, word: Word, isWeak: boolean) => {
@@ -143,7 +143,7 @@ export const fetchUserQuizData = async (userId: string): Promise<UserQuizData> =
   return userQuizData as UserQuizData;
 }
 
-export const resisterNewUserQuizData = async (userId: string): Promise<void> => {
+export const resisterNewUserQuizData = async (userId: string, userName: string): Promise<void> => {
   const docRef = doc(db, "userQuizDatas", userId);
-  await setDoc(docRef, {...emptyUserQuizData, userId: userId});
+  await setDoc(docRef, {...emptyUserQuizData, userId: userId, userName: userName, lastAccessedAt: Timestamp.now()});
 }
