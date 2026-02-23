@@ -1,5 +1,8 @@
 import { requestGemini } from "@/shared/ai/services/geminiRequestService";
 import { REQUEST_WORD_INFO_PROMPT } from "@/shared/ai/promps/vocabraryPrompts";
+import { Word } from "@/types";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 // wordScrapingService.ts
 interface ScrapingWordData {
@@ -83,16 +86,48 @@ export async function scrapeWord(word: string): Promise<ScrapingWordData> {
   };
 }
 
-export const fetchWordInfo = async (enWord: string): Promise<string> => {
+export const requestWordInfo = async (enWord: string): Promise<string> => {
   try{
     if(enWord.length > 100){
       throw new Error("入力が長すぎます。100文字以下にしてください。");
     }
     const prompt = REQUEST_WORD_INFO_PROMPT(enWord);
-    console.log(prompt);
-    return requestGemini(prompt);
+    const response = await requestGemini(prompt);
+    const match = response.match(/\{[\s\S]*\}/);
+    if (!match) {
+      throw new Error("AIからのレスポンスが不正です。");
+    }
+    return match[0];
   }catch(err){
     console.error(err);
     throw new Error(enWord + "の日本語への翻訳に失敗しました");
+  }
+}
+
+export const addWordInfo = async (word: Word): Promise<void> => {
+  try{
+    const wordInfoStr = await requestWordInfo(word.english);
+    const wordInfo = JSON.parse(wordInfoStr);
+    const japaneseSet = new Set<string>([...(word.japanese ?? []), ...(wordInfo.japanese ?? [])]);
+    const newWord: Word = {
+      english: word.english && word.english !== "" ? word.english : wordInfo.english ?? "",
+      japanese: Array.from(japaneseSet),
+      synonyms: wordInfo.synonyms ?? [],
+      antonyms: wordInfo.antonyms ?? [],
+      exampleEnSentence: wordInfo.exampleEnSentence ?? "",
+      exampleJaSentence: wordInfo.exampleJaSentence ?? "",
+      partOfSpeech: wordInfo.partOfSpeech ?? [],
+      pronunciation: wordInfo.pronunciation ?? "",
+      index: word.index ?? wordInfo.index ?? 0,
+      description: word.description ?? "",
+      id: word.id,
+      wordBookId: word.wordBookId,
+      createdAt: word.createdAt
+    };
+    const DocRef = doc(db, "words", word.id);
+    await setDoc(DocRef, newWord);
+  }catch(err){
+    console.error(err);
+    throw new Error(word.english + "の情報の取得に失敗しました");
   }
 }

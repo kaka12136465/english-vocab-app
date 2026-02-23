@@ -1,8 +1,7 @@
 import { Timestamp } from "firebase/firestore";
 
-
 // 単語追加フォームのデータ
-export interface AddWordFormData {
+export interface WordData {
   english: string;
   japanese: string[];
   synonyms: string[];
@@ -15,7 +14,7 @@ export interface AddWordFormData {
   description: string;
 }
 
-export const defaultAddWordFormData: AddWordFormData = {
+export const defaultWordData: WordData = {
     english: '',
     japanese: [''],
     synonyms: [],
@@ -29,12 +28,17 @@ export const defaultAddWordFormData: AddWordFormData = {
   };
 
 // 基本的な単語データ型
-export interface Word extends AddWordFormData {
+export interface Word extends WordData {
   id: string;
-  audioUrl: string;
   createdAt?: Timestamp; // 作成日時（オプション）
   wordBookId: string; // この単語を所有している単語帳のID
 }
+
+export const defaultWord: Word = {
+  ...defaultWordData,
+  id: '',
+  wordBookId: ''
+};
 
 
 

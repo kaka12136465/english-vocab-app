@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { EditWordFormData } from '../types/vocabulary.types';
-import { fetchWordInfo } from '../services/wordSearchingService';
-import { AddWordFormData, defaultAddWordFormData, Word } from '@/types';
+import { requestWordInfo } from '../services/wordSearchingService';
+import { WordData, defaultWordData, Word } from '@/types';
 
 interface EditWordFormProps {
   onSubmit: (newWord: EditWordFormData) => Promise<boolean>;
@@ -90,7 +90,7 @@ export const EditWordForm: React.FC<EditWordFormProps> = ({ onSubmit, onCancel, 
       const success = await onSubmit(formData);
       if (success) {
         // フォームをリセット
-        setFormData(defaultAddWordFormData);
+        setFormData(defaultWordData);
       }
     } catch (err: any) {
       setError(err.message);
@@ -99,14 +99,14 @@ export const EditWordForm: React.FC<EditWordFormProps> = ({ onSubmit, onCancel, 
     }
   };
 
-const handleFetchWordInfo: (word: string) => Promise<AddWordFormData | null> = async (word: string) => {
+const handleFetchWordInfo: (word: string) => Promise<WordData | null> = async (word: string) => {
     if(word.length === 0){
       setError("英単語は必須です");
       return null;
     }
     try{
       console.log('searching "' + word + '"');
-      const response = await fetchWordInfo(word);
+      const response = await requestWordInfo(word);
       console.log("fetchWordInfo response", response);
       const wordInfo = JSON.parse(response);
       const newFormData = {

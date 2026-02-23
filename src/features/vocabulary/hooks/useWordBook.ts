@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
-import { Word } from '@/types';
-import { AddWordFormData, EditWordFormData } from '../types/vocabulary.types';
+import { WordData, Word } from '@/types';
+import { EditWordFormData } from '../types/vocabulary.types';
 import * as vocabularyService from '../services/vocabularyService';
 import * as wordBookService from '../services/wordBookService';
 import { Timestamp } from 'firebase/firestore';
@@ -36,7 +36,7 @@ export const useVocabulary = (wordBookId: string | null) => {
    * 単語帳に新しい単語を追加
    */
   const addWord = useCallback(async (
-    formData: AddWordFormData
+    formData: WordData
   ): Promise<boolean> => {
 
     setLoading(true);
@@ -59,7 +59,6 @@ export const useVocabulary = (wordBookId: string | null) => {
         ...formData,
         wordBookId: wordBookId!,
         createdAt: Timestamp.now(),
-        audioUrl: '',
       });
 
       // 単語リストを再読み込み

@@ -33,7 +33,7 @@ function App() {
     <BrowserRouter>
       <Header user={user} onLogout={logout}/>
       <Routes>
-        <Route path="/" element={ user ? <Navigate to="/home" replace /> : <Navigate to="/auth" replace />} />
+        <Route path="/" element={ user ? <Navigate to="/quizSetting" replace /> : <Navigate to="/auth" replace />} />
         <Route path="/auth" element={ <AuthPage user={user} signup={signup} login={login} /> } />
         <Route path="/home" element={ <HomePage user={user}/>} />
         <Route path="/quizSetting" element={ <QuizSettingPage user={user} /> } />

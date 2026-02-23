@@ -1,14 +1,6 @@
-import { AddWordFormData, Word } from '@/types';
-import { Timestamp } from 'firebase/firestore';
+import { WordData } from '@/types';
 
-// ユーザー個別の単語（マイ単語帳）
-export interface UserWord extends Word {
-  userId: string;
-  isPublic: boolean; // 他のユーザーと共有するか
-  createdAt: Timestamp;
-}
-
-export interface EditWordFormData extends AddWordFormData{
+export interface EditWordFormData extends WordData{
   
 }
 

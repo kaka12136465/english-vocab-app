@@ -153,6 +153,25 @@ export const QuizCard: React.FC<QuizCardProps> = ({
             {question.word.pronunciation && (
               <p className="text-sm text-gray-500">[{question.word.pronunciation}]</p>
             )}
+
+            {/* 例文表示 */}
+            <div className="grid grid-cols-[auto_1fr] gap-x-2 px-4 py-3 bg-gray-50 rounded-lg mt-4">
+              
+              {question.word.exampleEnSentence && (
+                <>
+                  <span className="mr-2 text-sm font-medium text-gray-700 mb-1">例文:</span>
+                  <span className="text-sm text-gray-600">{question.word.exampleEnSentence}</span>
+                </>
+              )}
+
+              {/* 例文の日本語訳 */}
+              {isSubmitted && question.word.exampleJaSentence && (
+                <>
+                  <span className="mr-2 text-sm font-medium text-gray-700 mb-1">和訳:</span>
+                  <span className="text-sm text-gray-600">{question.word.exampleJaSentence}</span>
+                </>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -257,14 +276,6 @@ export const QuizCard: React.FC<QuizCardProps> = ({
             </p>
             
           </div>
-
-          {/* 例文表示 */}
-          {question.word.exampleEnSentence && (
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm font-medium text-gray-700 mb-1">例文:</p>
-              <p className="text-sm text-gray-600">{question.word.exampleEnSentence}</p>
-            </div>
-          )}
 
           {/* 次へボタン */}
           <button

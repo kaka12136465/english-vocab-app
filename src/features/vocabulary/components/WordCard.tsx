@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Word } from "@/types";
 import { Timestamp } from "firebase/firestore";
+import { addWordInfo } from "../services/wordSearchingService";
 // 単語カードコンポーネント
 interface WordCardProps {
   word: Word;
@@ -25,6 +26,15 @@ export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord, setShowA
             {showDetails ? '閉じる' : '詳細'}
           </button>
         </div>
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            addWordInfo(word);
+          }}
+          className="hidden text-sm mt-1 text-primary-600 hover:text-primary-700 font-medium"
+        >
+          情報追加
+        </button>
       </div>
 
       <div className="pt-2 space-y-2">
@@ -34,7 +44,7 @@ export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord, setShowA
               <p className="flex-1 text-gray-800">{word.japanese.join(', ')}</p>
             </div>
             {word.pronunciation && (
-              <div className="">
+              <div className="flex flex-row gap-6">
                 <p className="text-sm text-gray-500">[{word.pronunciation}]</p>
                 <button
                   onClick={(e) => {
@@ -44,7 +54,15 @@ export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord, setShowA
                     utterance.lang = "en-US";
                     speechSynthesis.speak(utterance);
                   }} 
+                  className="text-sm text-primary-600 hover:text-primary-700 font-medium"
                 >再生</button>
+              </div>
+            )}
+            {/* 品詞 */}
+            {word.partOfSpeech && (
+              <div>
+                <p className="text-sm text-gray-600">品詞:</p>
+                <p className="text-gray-800">{word.partOfSpeech.join(', ')}</p>
               </div>
             )}
             {word.synonyms.length > 0 && (
@@ -61,10 +79,24 @@ export const WordCard: React.FC<WordCardProps> = ({ word, onDeleteWord, setShowA
               </div>
             )}
 
-            {word.exampleSentence && (
+            {word.exampleEnSentence && (
               <div>
                 <p className="text-sm text-gray-600">例文:</p>
-                <p className="text-gray-800 italic">{word.exampleSentence}</p>
+                <p className="text-gray-800 italic">{word.exampleEnSentence}</p>
+              </div>
+            )}
+
+            {word.exampleJaSentence && (
+              <div>
+                <p className="text-sm text-gray-600">和訳:</p>
+                <p className="text-gray-800 italic">{word.exampleJaSentence}</p>
+              </div>
+            )}
+
+            {word.description && (
+              <div>
+                <p className="text-sm text-gray-600">説明:</p>
+                <p className="text-gray-800">{word.description}</p>
               </div>
             )}
 

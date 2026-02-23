@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { AddWordForm } from '@/features/vocabulary/components/AddWordForm';
 import { useVocabulary } from '@/features/vocabulary/hooks/useWordBook';
-import { AddWordFormData, EditWordFormData} from '@/features/vocabulary/types/vocabulary.types';
+import { EditWordFormData} from '@/features/vocabulary/types/vocabulary.types';
 import { WordCard } from '@/features/vocabulary/components/WordCard';
 import { deleteWord } from '@/features/vocabulary/services/vocabularyService';
 import { EditWordForm } from '@/features/vocabulary/components/EditWordForm';
-import { Word } from '@/types';
+import { WordData, Word } from '@/types';
 import { User } from 'firebase/auth';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { addWordInfo } from '../services/wordSearchingService';
 
 interface WordsPageProps {
   user: User | null;
@@ -35,6 +36,24 @@ export const WordsPage: React.FC<WordsPageProps> = ({ user }) => {
   const [sortedWords, setSortedWords] = useState<Word[]>([]);
   const [wordsCnt, setWordsCnt] = useState(0);
   const navigate = useNavigate();
+
+  const handleDoProcessToAllWord = async (process: (word: Word) => Promise<void>) => {
+    try {
+
+      let index = 0;
+      const processedWords: Word[] = [];
+      for(let i = index; i < words.length; i++){
+        const word = words[i];
+        await process(word);
+        processedWords.push(word);
+        console.log("処理中: " + index + "/" + (words.length-1));
+        
+        index++;
+      }
+    }catch (error) {
+      console.error("変換エラー:", error);
+    }
+  }
 
   useEffect(() => {
     setWordsCnt(words.length);
@@ -71,7 +90,7 @@ export const WordsPage: React.FC<WordsPageProps> = ({ user }) => {
     loadWordsInWordBook();
   }, [loadWordsInWordBook]);
 
-  const handleAddWord = async (formData: AddWordFormData) => {
+  const handleAddWord = async (formData: WordData) => {
     const success = await addWord(formData);
     return success;
   };
@@ -123,6 +142,12 @@ export const WordsPage: React.FC<WordsPageProps> = ({ user }) => {
             {error}
           </div>
         )}
+        <button
+          onClick={() => handleDoProcessToAllWord(addWordInfo)}
+          className="hidden mb-4 px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600 focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 transition-colors"
+        >
+          全単語変換
+        </button>
 
         {/* 追加ボタン */}
         {!showAddForm && !showEditForm && (

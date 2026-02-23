@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { AddWordFormData, defaultAddWordFormData } from '@/types';
-import { fetchWordInfo } from '../services/wordSearchingService';
+import { defaultWordData, WordData } from '@/types';
+import { requestWordInfo } from '../services/wordSearchingService';
 
 interface AddWordFormProps {
-  onSubmit: (formData: AddWordFormData) => Promise<boolean>; // handleAddWord関数を受け取る
+  onSubmit: (formData: WordData) => Promise<boolean>; // handleAddWord関数を受け取る
   onCancel: () => void;
   wordsCnt: number;
   setWordsCnt: (cnt: number) => void;
@@ -12,7 +12,7 @@ interface AddWordFormProps {
 
 // WordsPageから呼ばれる
 export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wordsCnt, setWordsCnt }) => {
-  const [formData, setFormData] = useState<AddWordFormData>(defaultAddWordFormData);
+  const [formData, setFormData] = useState<WordData>(defaultWordData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
   const [isSearchLoading, setIsSearchLoading] = useState(false);
@@ -120,7 +120,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
   };
 
   // 英単語を検索して情報を取得しそれを返す
-  const handleFetchWordInfo: (word: string) => Promise<AddWordFormData | null> = async (word: string) => {
+  const handleFetchWordInfo: (word: string) => Promise<WordData | null> = async (word: string) => {
     if(word.length === 0){
       setError("英単語は必須です");
       return null;
@@ -129,7 +129,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
     try{
       console.log('searching "' + word + '"');
       const index = wordsCnt + 1;
-      const response = await fetchWordInfo(word);
+      const response = await requestWordInfo(word);
       console.log("fetchWordInfo response", response);
       const wordInfo = JSON.parse(response);
       const newFormData = {
@@ -172,8 +172,8 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
           let index = wordsCnt + 1;
           for(const word of addingWords){
             console.log("searching", word);
-            const wordInfo = JSON.parse(await fetchWordInfo(word));
-            const newFormData: AddWordFormData = {
+            const wordInfo = JSON.parse(await requestWordInfo(word));
+            const newFormData: WordData = {
               english: wordInfo.english,
               japanese: wordInfo.japanese,
               antonyms: wordInfo.antonyms,
@@ -489,6 +489,20 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
             </div>
           </div>
 
+          {/* 品詞 */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              品詞
+            </label>
+            <input
+              type="text"
+              value={formData.partOfSpeech.join(", ")}
+              onChange={(e) => setFormData(prev => ({ ...prev, partOfSpeech: e.target.value.split(",").map(pos => pos.trim()) }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="例: noun, verb"
+            />
+          </div>
+
           {/* 日本語訳 */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -604,6 +618,13 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
               onChange={(e) => setFormData(prev => ({ ...prev, exampleEnSentence: e.target.value }))}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="例: I eat an apple every day."
+              rows={3}
+            />
+            <textarea
+              value={formData.exampleJaSentence}
+              onChange={(e) => setFormData(prev => ({ ...prev, exampleJaSentence: e.target.value }))}
+              className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              placeholder="例: 私は毎日リンゴを食べます。"
               rows={3}
             />
           </div>
