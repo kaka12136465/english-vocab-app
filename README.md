@@ -2,93 +2,97 @@
 
 TypeScript、React、Firebase を使用した英単語学習アプリケーション
 
-## 🎯 機能
+## 機能
 
 - **ユーザー認証**: Firebase Authentication による登録・ログイン
-- **クイズ機能**: 
-  - 英単語 → 和訳
-  - 和訳 → 英単語
-  - 音声 → 和訳（音声再生機能付き）
-- **音声再生**: Web Speech API による英単語の発音再生
-- **学習進捗管理**: 個別の習熟度データ保存
-- **マイ単語帳**: ユーザーが独自の単語を追加・管理できる機能
+- **単語帳管理**: 単語帳の作成・管理、単語の追加・編集
+- **クイズ機能**:
+  - 英語 → 日本語
+  - 日本語 → 英語
+  - 音声 → 日本語（Web Speech API による発音再生）
+  - **学習モード**: 暗記カード → グループクイズ → 総復習の3ステップ構成
+- **クイズ設定**:
+  - 単語帳・出題範囲・出題数の指定
+  - 苦手単語・得意単語・未学習単語の絞り込み
+  - 前回のクイズ設定を自動保存・復元
+  - 単語帳ごとの統計（総単語数・苦手・得意・未学習）をリアルタイム表示
+- **パフォーマンス最適化**: sessionStorage による単語データのキャッシュでFirebase クエリを節約
+- **習熟度管理**: 単語ごとの苦手/得意フラグを記録し、次回以降の出題に反映
 
-## 🏗 技術スタック
+## 技術スタック
 
-- **Frontend**: React 18 + TypeScript + Vite
+- **Frontend**: React 19 + TypeScript + Vite
 - **Backend**: Firebase
   - Authentication: ユーザー認証
   - Firestore: データベース
-  - Storage: 音声ファイル保存
   - Hosting: デプロイ先
 - **UI**: TailwindCSS
+- **Routing**: React Router v6
 - **State Management**: React Hooks
 
-## 🗄 データベース選定理由
+## データ構造
 
-### Firestore を選択した理由:
-
-1. **リアルタイム同期**: ユーザーの学習進捗をリアルタイムで同期
-2. **柔軟なスキーマ**: NoSQLの利点を活かし、単語データの配列フィールド（類義語、対義語など）を自然に扱える
-3. **セキュリティルール**: きめ細かいアクセス制御が可能
-4. **スケーラビリティ**: 自動スケーリングによる高可用性
-5. **オフライン対応**: ローカルキャッシュによるオフライン学習が可能
-
-### コレクション設計:
+### 単語データ型 (`Word`)
 
 ```
-words (共通・読み取り専用)
-  ├─ wordId
-      ├─ english: string
-      ├─ japanese: string[]
-      ├─ synonyms: string[]
-      ├─ antonyms: string[]
-      ├─ exampleSentence: string
-      ├─ pronunciation: string
-      └─ audioUrl: string
-
-userWords (ユーザー個別・読み書き可能)
-  ├─ wordId
-      ├─ userId: string
-      ├─ english: string
-      ├─ japanese: string[]
-      ├─ synonyms: string[]
-      ├─ antonyms: string[]
-      ├─ exampleSentence: string
-      ├─ pronunciation: string
-      ├─ audioUrl: string
-      ├─ isPublic: boolean
-      └─ createdAt: timestamp
-
-userProgress (ユーザー個別)
-  ├─ userId_wordId (複合キー)
-      ├─ userId: string
-      ├─ wordId: string
-      ├─ status: 'weak' | 'normal' | 'strong'
-      ├─ correctCount: number
-      ├─ totalAttempts: number
-      └─ lastAttempted: timestamp
+Word
+  ├─ id: string
+  ├─ english: string
+  ├─ japanese: string[]
+  ├─ synonyms: string[]
+  ├─ antonyms: string[]
+  ├─ exampleEnSentence: string
+  ├─ exampleJaSentence: string
+  ├─ partOfSpeech: string[]
+  ├─ pronunciation: string
+  ├─ index: number
+  ├─ description: string
+  ├─ wordBookId: string
+  └─ createdAt?: Timestamp
 ```
 
-## 📦 プロジェクト構造
+### Firestore コレクション設計
+
+```
+wordBooks (単語帳)
+  ├─ id
+      ├─ name: string
+      ├─ description?: string
+      ├─ ownerId: string
+      ├─ wordsCnt: number
+      └─ createdAt: Timestamp
+
+words (単語)
+  ├─ id
+      ├─ (Word のフィールド全て)
+      └─ wordBookId: string
+
+userQuizData (ユーザーごとのクイズデータ)
+  ├─ userId
+      ├─ userId: string
+      ├─ userName: string
+      ├─ lastAccessedAt: Timestamp
+      ├─ lastPlayQuizSetting: QuizSetting
+      └─ wordWeaknesses: Record<wordId, boolean>  // true=苦手, false=得意, 未登録=未学習
+```
+
+## プロジェクト構造
 
 ```
 src/
-├── assets/           # 静的リソース
+├── components/       # 共通コンポーネント（Header, HomePage）
 ├── lib/
-│   └── firebase.ts   # Firebase初期化
+│   └── firebase.ts   # Firebase 初期化
 ├── config/
 │   └── env.ts        # 環境変数
 ├── features/
 │   ├── auth/         # 認証機能
-│   ├── quiz/         # クイズ機能
-│   ├── vocabulary/   # 単語管理
-│   └── userProgress/ # 進捗管理
-├── types/            # 共通型定義
-└── utils/            # ユーティリティ
+│   ├── quiz/         # クイズ・学習機能
+│   └── vocabulary/   # 単語帳・単語管理
+└── types/            # 共通型定義
 ```
 
-## 🚀 セットアップ
+## セットアップ
 
 ### 1. 依存関係のインストール
 
@@ -118,16 +122,18 @@ VITE_FIREBASE_APP_ID=your_app_id
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // 単語データ: 全ユーザー読み取り専用
+    match /wordBooks/{wordBookId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == resource.data.ownerId;
+    }
+
     match /words/{wordId} {
       allow read: if request.auth != null;
-      allow write: if false; // 管理者のみ（コンソールから）
+      allow write: if request.auth != null;
     }
-    
-    // ユーザー進捗: 自分のデータのみ読み書き可能
-    match /userProgress/{progressId} {
-      allow read, write: if request.auth != null && 
-                            request.auth.uid == resource.data.userId;
+
+    match /userQuizData/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
@@ -139,15 +145,29 @@ service cloud.firestore {
 npm run dev
 ```
 
-## 📱 使用方法
+## 使用方法
 
-1. アカウント登録/ログイン
-2. **マイ単語帳で単語を追加**（または既存のサンプルデータを使用）
-3. クイズモードを選択（英→和、和→英、音声→和）
-4. 問題に回答
-5. 結果を確認し、学習進捗が自動保存される
+1. アカウント登録 / ログイン
+2. **単語帳を作成**し、単語を追加
+3. クイズ設定画面で単語帳・モード・出題範囲を選択
+4. クイズを開始して回答
+5. 結果確認 — 苦手フラグが自動更新され、次回以降の出題に反映される
 
-## 🚢 デプロイ
+### 学習モードの流れ
+
+```
+暗記フェーズ（10単語ずつカードで確認）
+    ↓
+グループクイズ（同じ10単語をクイズ形式で）
+    ↓ （全グループ完了後）
+総復習クイズ（全選択単語をシャッフルして出題）
+    ↓
+最終結果
+```
+
+- 学習する単語数はクイズ設定の「出題数」に従います
+
+## デプロイ
 
 ### Firebase Hosting へのデプロイ
 
@@ -168,6 +188,6 @@ firebase init hosting
 firebase deploy
 ```
 
-## 📝 ライセンス
+## ライセンス
 
 MIT

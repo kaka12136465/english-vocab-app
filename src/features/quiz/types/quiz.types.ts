@@ -70,7 +70,7 @@ export const emptyUserQuizData: UserQuizData ={
 }
 
 // クイズの種類
-export type QuizMode = 'english-to-japanese' | 'japanese-to-english' | 'audio-to-japanese';
+export type QuizMode = 'english-to-japanese' | 'japanese-to-english' | 'audio-to-japanese' | 'learning';
 
 // クイズ問題データ型
 export interface QuizQuestion {

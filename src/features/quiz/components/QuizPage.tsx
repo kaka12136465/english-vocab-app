@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { QuizCard } from '@/features/quiz/components/QuizCard';
 import { QuizResult } from '@/features/quiz/components/QuizResult';
+import { LearningPage } from '@/features/quiz/components/LearningPage';
 import { useQuiz } from '@/features/quiz/hooks/useQuiz';
 import { Word } from '@/types';
 import { emptyUserQuizData, QuizSetting, QuizState, UserQuizData } from '@/features/quiz/types/quiz.types';
@@ -57,6 +58,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ user }) => {
   });
 
   useEffect(() => {
+    if (quizSetting.quizMode === 'learning') return;
     const start = async () => {
       try {
         await initializeQuiz();
@@ -66,6 +68,10 @@ export const QuizPage: React.FC<QuizPageProps> = ({ user }) => {
     };
     start();
   }, []);
+
+  if (quizSetting.quizMode === 'learning') {
+    return <LearningPage quizSetting={quizSetting} initialUserQuizData={gettedUserQuizData} />;
+  }
 
   if (quizState.isComplete) {
     const summary = getQuizSummary();

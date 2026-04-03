@@ -7,11 +7,11 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   plugins: [react(),
     VitePWA({
-      registerType: 'autoUpdate',  // ← これを確認
+      registerType: 'autoUpdate',
       workbox: {
-        cleanupOutdatedCaches: true,  // 追加
-        skipWaiting: true,             // 追加
-        clientsClaim: true             // 追加
+        cleanupOutdatedCaches: true,
+        skipWaiting: true,
+        clientsClaim: true
       },
       manifest: {
       name: 'English Vocab App',

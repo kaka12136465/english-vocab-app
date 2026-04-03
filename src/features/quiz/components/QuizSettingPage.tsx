@@ -1,10 +1,18 @@
 import { fetchUserQuizData, resisterNewUserQuizData } from "@/features/quiz/services/quizService";
 import { emptyUserQuizData, QuizMode, QuizSetting, UserQuizData } from "@/features/quiz/types/quiz.types";
 import { getAllWordBooks } from "@/features/vocabulary/services/vocabularyService";
-import { WordBook } from "@/types";
+import { getWordsInWordBook } from "@/features/vocabulary/services/wordBookService";
+import { Word, WordBook } from "@/types";
 import { User } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+interface WordBookStats {
+  total: number;
+  weak: number;
+  notWeak: number;
+  unlearned: number;
+}
 
 interface QuizSettingPageProps {
   user: User | null;
@@ -15,11 +23,12 @@ export const QuizSettingPage: React.FC<QuizSettingPageProps> = ({user}) => {
   const [quizSetting, setQuizSetting] = useState<QuizSetting>(userQuizData.lastPlayQuizSetting);
   const [wordBooksDict, setWordBooksDict] = useState<Record<string, string>>({}); // key=単語帳のID, value=単語帳の名前
   const [quizRange, setQuizRange] = useState<[string, string]>([quizSetting.quizRange[0].toString(), quizSetting.quizRange[1].toString()]);
+  const [wordBookStats, setWordBookStats] = useState<WordBookStats | null>(null);
 
   const quizModes: { value: QuizMode; label: string; description: string; icon: string }[] = [
     {
       value: 'english-to-japanese',
-      label: '英語 → 日本語', 
+      label: '英語 → 日本語',
       description: '英 → 和',
       icon: '🇬🇧 → 🇯🇵',
     },
@@ -34,6 +43,12 @@ export const QuizSettingPage: React.FC<QuizSettingPageProps> = ({user}) => {
       label: '音声 → 日本語',
       description: '英音声 → 和',
       icon: '🔊 → 🇯🇵',
+    },
+    {
+      value: 'learning',
+      label: '学習モード',
+      description: '学習モード',
+      icon: '📚',
     },
   ];
 
@@ -69,6 +84,32 @@ export const QuizSettingPage: React.FC<QuizSettingPageProps> = ({user}) => {
 		fetchUserQuizDataAndSetQuizSetting();
     fetchWordBooks();
   }, [user]);
+
+  useEffect(() => {
+    if (!quizSetting.wordBookId) return;
+    const fetchStats = async () => {
+      setWordBookStats(null);
+      const cacheKey = `wordBook_words_${quizSetting.wordBookId}`;
+      let words: Word[];
+      const cached = sessionStorage.getItem(cacheKey);
+      if (cached) {
+        words = JSON.parse(cached) as Word[];
+      } else {
+        words = await getWordsInWordBook(quizSetting.wordBookId);
+        sessionStorage.setItem(cacheKey, JSON.stringify(words));
+      }
+      const weaknesses = userQuizData.wordWeaknesses;
+      let weak = 0, notWeak = 0, unlearned = 0;
+      for (const word of words) {
+        const status = weaknesses[word.id];
+        if (status === true) weak++;
+        else if (status === false) notWeak++;
+        else unlearned++;
+      }
+      setWordBookStats({ total: words.length, weak, notWeak, unlearned });
+    };
+    fetchStats();
+  }, [quizSetting.wordBookId, userQuizData]);
 
 	useEffect(() => {
 		let range = quizSetting.quizRange;
@@ -136,15 +177,15 @@ export const QuizSettingPage: React.FC<QuizSettingPageProps> = ({user}) => {
 				</div>
 
 				{/* クイズモード */}
-				<select 
-					value={quizSetting.quizMode} 
-					onChange={(e) => {setQuizSetting({...quizSetting, quizMode: modeMap.get(e.target.value ?? "英 → 和") as QuizMode});}}
+				<select
+					value={quizSetting.quizMode}
+					onChange={(e) => setQuizSetting({...quizSetting, quizMode: e.target.value as QuizMode})}
 					className="px-4 py-2 border rounded"
-			>
-					{Array.from(modeMap.keys()).map((item, index) => (
-					<option key={index} value={item}>
-							{item}
-					</option>
+				>
+					{quizModes.map((mode) => (
+						<option key={mode.value} value={mode.value}>
+							{mode.description}
+						</option>
 					))}
 				</select>
 
@@ -256,19 +297,34 @@ export const QuizSettingPage: React.FC<QuizSettingPageProps> = ({user}) => {
 					クイズを開始
 				</button>
 			
-				{/* 統計情報（将来的に実装） */}
-				<div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-					<div className="bg-white rounded-lg shadow p-6 text-center">
-						<p className="text-sm text-gray-600 mb-1">学習済み単語</p>
-						<p className="text-3xl font-bold text-primary-600">-</p>
-					</div>
-					<div className="bg-white rounded-lg shadow p-6 text-center">
-						<p className="text-sm text-gray-600 mb-1">平均正答率</p>
-						<p className="text-3xl font-bold text-green-600">-</p>
-					</div>
-					<div className="bg-white rounded-lg shadow p-6 text-center">
-						<p className="text-sm text-gray-600 mb-1">総出題数</p>
-						<p className="text-3xl font-bold text-gray-800">-</p>
+				{/* 単語帳の統計情報 */}
+				<div className="mt-8">
+					<h2 className="text-sm font-medium text-gray-500 mb-3">選択中の単語帳</h2>
+					<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+						<div className="bg-gray-50 rounded-lg p-4 text-center">
+							<p className="text-xs text-gray-500 mb-1">総単語数</p>
+							<p className="text-2xl font-bold text-gray-800">
+								{wordBookStats ? wordBookStats.total : '-'}
+							</p>
+						</div>
+						<div className="bg-red-50 rounded-lg p-4 text-center">
+							<p className="text-xs text-red-500 mb-1">苦手単語</p>
+							<p className="text-2xl font-bold text-red-600">
+								{wordBookStats ? wordBookStats.weak : '-'}
+							</p>
+						</div>
+						<div className="bg-green-50 rounded-lg p-4 text-center">
+							<p className="text-xs text-green-600 mb-1">得意単語</p>
+							<p className="text-2xl font-bold text-green-600">
+								{wordBookStats ? wordBookStats.notWeak : '-'}
+							</p>
+						</div>
+						<div className="bg-blue-50 rounded-lg p-4 text-center">
+							<p className="text-xs text-blue-500 mb-1">未学習</p>
+							<p className="text-2xl font-bold text-blue-600">
+								{wordBookStats ? wordBookStats.unlearned : '-'}
+							</p>
+						</div>
 					</div>
 				</div>
 			</main>
