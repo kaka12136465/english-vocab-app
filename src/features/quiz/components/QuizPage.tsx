@@ -57,8 +57,24 @@ export const QuizPage: React.FC<QuizPageProps> = ({ user }) => {
     setUserQuizData
   });
 
+  const QUIZ_SESSION_KEY = `quiz_session_${quizSetting.wordBookId}`;
+
+  // マウント時：sessionStorage に中断データがあれば復元、なければ通常初期化
   useEffect(() => {
     if (quizSetting.quizMode === 'learning') return;
+
+    const saved = sessionStorage.getItem(QUIZ_SESSION_KEY);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (!data.quizState?.isComplete) {
+          setQuizState(data.quizState);
+          setTargetWords(data.targetWords ?? []);
+          return; // 復元成功 → Firebase クエリ不要
+        }
+      } catch { /* 壊れたデータは無視 */ }
+    }
+
     const start = async () => {
       try {
         await initializeQuiz();
@@ -68,6 +84,16 @@ export const QuizPage: React.FC<QuizPageProps> = ({ user }) => {
     };
     start();
   }, []);
+
+  // クイズ進捗を sessionStorage に随時保存
+  useEffect(() => {
+    if (quizSetting.quizMode === 'learning' || !quizState.config) return;
+    if (quizState.isComplete) {
+      sessionStorage.removeItem(QUIZ_SESSION_KEY);
+      return;
+    }
+    sessionStorage.setItem(QUIZ_SESSION_KEY, JSON.stringify({ quizState, targetWords }));
+  }, [quizState, targetWords]);
 
   if (quizSetting.quizMode === 'learning') {
     return <LearningPage quizSetting={quizSetting} initialUserQuizData={gettedUserQuizData} />;

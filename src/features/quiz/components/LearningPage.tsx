@@ -6,6 +6,7 @@ import { MemorizationCard } from './MemorizationCard';
 import { QuizCard } from './QuizCard';
 import { QuizResult } from './QuizResult';
 import * as quizService from '../services/quizService';
+import { updateLastPlayQuizSettingOfUser } from '../services/quizService';
 import { getWordsInWordBook } from '@/features/vocabulary/services/wordBookService';
 import { useNavigate } from 'react-router-dom';
 
@@ -37,6 +38,9 @@ export const LearningPage: React.FC<LearningPageProps> = ({ quizSetting, initial
   const [userQuizData, setUserQuizData] = useState<UserQuizData>(initialUserQuizData);
   const [quizState, setQuizState] = useState<QuizState>(emptyQuizState);
 
+  // sessionStorage キー（単語帳ごとに一意）
+  const SESSION_KEY = `learning_session_${quizSetting.wordBookId}`;
+
   // useQuiz には 'learning' 以外のモードを渡す（resetQuiz/generateQuestion で使われるため）
   const learningQuizSetting: QuizSetting = { ...quizSetting, quizMode: 'english-to-japanese' };
 
@@ -56,8 +60,31 @@ export const LearningPage: React.FC<LearningPageProps> = ({ quizSetting, initial
     setUserQuizData,
   });
 
-  // 初期化：単語取得・グループ分割
+  // マウント時：sessionStorage に中断データがあれば復元、なければ通常初期化
   useEffect(() => {
+    const tryRestore = (): boolean => {
+      const saved = sessionStorage.getItem(SESSION_KEY);
+      if (!saved) return false;
+      try {
+        const data = JSON.parse(saved);
+        if (data.phase === 'complete' || data.phase === 'loading') return false;
+        setPhase(data.phase);
+        setGroups(data.groups ?? []);
+        setGroupIndex(data.groupIndex ?? 0);
+        setMemWordIndex(data.memWordIndex ?? 0);
+        setAllWords(data.allWords ?? []);
+        setTargetWords(data.targetWords ?? []);
+        setQuizState(data.quizState ?? emptyQuizState);
+        if (data.userQuizData) setUserQuizData(data.userQuizData);
+        return true;
+      } catch {
+        return false;
+      }
+    };
+
+    if (tryRestore()) return;
+
+    // 通常初期化
     const init = async () => {
       const words = await getWordsInWordBook(quizSetting.wordBookId);
       let range: [number, number] = [quizSetting.quizRange[0], quizSetting.quizRange[1]];
@@ -89,12 +116,29 @@ export const LearningPage: React.FC<LearningPageProps> = ({ quizSetting, initial
       for (let i = 0; i < selected.length; i += GROUP_SIZE) {
         newGroups.push(selected.slice(i, i + GROUP_SIZE));
       }
+
+      // プレイ履歴を保存
+      await updateLastPlayQuizSettingOfUser(initialUserQuizData, { ...quizSetting, quizRange: range });
+
       setAllWords(selected);
       setGroups(newGroups);
       setPhase('memorize');
     };
     init();
   }, []);
+
+  // 進捗を sessionStorage に随時保存
+  useEffect(() => {
+    if (phase === 'loading') return;
+    if (phase === 'complete') {
+      sessionStorage.removeItem(SESSION_KEY);
+      return;
+    }
+    sessionStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ phase, groups, groupIndex, memWordIndex, allWords, targetWords, quizState, userQuizData })
+    );
+  }, [phase, groupIndex, memWordIndex, quizState, targetWords, userQuizData]);
 
   // グループクイズ開始
   const startGroupQuiz = (group: Word[]) => {
