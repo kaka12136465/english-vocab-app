@@ -287,6 +287,20 @@ export const QuizSettingPage: React.FC<QuizSettingPageProps> = ({user}) => {
 							/>
 						</span>
 					</div>
+
+					<div className="flex gap-2">
+						<span className="w-40">音声を自動再生</span>
+						<span>
+							<input
+								type="checkbox"
+								checked={quizSetting.autoPlayAudio ?? false}
+								onChange={(e) => {
+									setQuizSetting({...quizSetting, autoPlayAudio: e.target.checked});
+								}}
+								className="size-4"
+							/>
+						</span>
+					</div>
 				</div>
 
 				{/* スタートボタン */}

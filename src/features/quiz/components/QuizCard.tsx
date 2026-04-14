@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { QuizQuestionData, UserQuizData} from '../types/quiz.types';
+import { playAudio } from '../services/quizService';
 import { Word } from '@/types';
 
 interface QuizCardProps {
@@ -14,6 +15,7 @@ interface QuizCardProps {
   onAddJpToEnWord: (word: Word, japanese:string) => Promise<void>;
   resisterWordWeakness: (word:Word, isWeak: boolean) => Promise<void>;
   userQuizData: UserQuizData;
+  autoPlayAudio?: boolean;
 }
 
 export const QuizCard: React.FC<QuizCardProps> = ({
@@ -28,6 +30,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   onAddJpToEnWord,
   resisterWordWeakness,
   userQuizData,
+  autoPlayAudio = false,
 }) => {
 
   const [userAnswer, setUserAnswer] = useState('');
@@ -38,12 +41,13 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   const [isAddJpButtonClicked, setIsAddJpButtonClicked] = useState(false);
   const [isWeak, setIsWeak] = useState<boolean>(userQuizData.wordWeaknesses[question.word.id] ?? false);
 
-  // 問題が変わったらリセット
+  // 問題が変わったらリセット・音声自動再生
   useEffect(() => {
     setUserAnswer('');
     setIsSubmitted(false);
     setIsCorrect(null);
     setIsWeak(userQuizData.wordWeaknesses[question.word.id] ?? false);
+    if (autoPlayAudio) playAudio(question.word.english);
   }, [question]);
 
   useEffect(() => {
@@ -66,9 +70,15 @@ export const QuizCard: React.FC<QuizCardProps> = ({
     setIsCheckButtonClicked(false);
     try {
       const correct = await onSubmit(userAnswer);
-      if(userQuizData.wordWeaknesses[question.word.id] == undefined){
+      const currentWeakness = userQuizData.wordWeaknesses[question.word.id];
+      if (currentWeakness == undefined) {
+        // 未学習: 正誤に応じてセット
         resisterWordWeakness(question.word, !correct);
         setIsWeak(!correct);
+      } else if (correct && currentWeakness === true) {
+        // 正解かつ苦手 → 自動解除
+        resisterWordWeakness(question.word, false);
+        setIsWeak(false);
       }
       setIsCorrect(correct);
       setIsSubmitted(true);
@@ -147,9 +157,21 @@ export const QuizCard: React.FC<QuizCardProps> = ({
           </div>
         ) : (
           <div className="text-center">
-            <p className="text-3xl font-bold text-gray-800 mb-2">
-              {question.question}
-            </p>
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <p className="text-3xl font-bold text-gray-800">
+                {question.question}
+              </p>
+              <button
+                type="button"
+                onClick={() => playAudio(question.word.english)}
+                className="p-1.5 text-gray-400 hover:text-primary-600 transition-colors"
+                title="音声を再生"
+              >
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
             {question.word.pronunciation && (
               <p className="text-sm text-gray-500">[{question.word.pronunciation}]</p>
             )}

@@ -273,6 +273,7 @@ export const LearningPage: React.FC<LearningPageProps> = ({ quizSetting, initial
           onAddJpToEnWord={addJpToEnWord}
           resisterWordWeakness={resisterWordWeakness}
           userQuizData={userQuizData}
+          autoPlayAudio={quizSetting.autoPlayAudio ?? false}
         />
       </div>
     );

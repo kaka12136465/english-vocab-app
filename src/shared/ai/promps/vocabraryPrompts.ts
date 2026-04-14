@@ -16,3 +16,6 @@ export const REQUEST_CHECK_ANSWER_PROMPT = (word: string, userAnswer: string) =>
     `ユーザーの回答「${userAnswer}」が英単語「${word}」の意味として正しいかどうかを判断してください。
     品詞も考慮して、正しい場合は「true」、誤りがある場合は「false」とだけ答えてください。
     `
+
+export const REQUEST_TRANSLATE_PROMPT = (text: string) =>
+    `以下の英文を自然な日本語に翻訳してください。翻訳文のみを返してください。\n"${text}"`

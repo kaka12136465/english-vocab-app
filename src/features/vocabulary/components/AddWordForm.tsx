@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { defaultWordData, WordData } from '@/types';
-import { requestWordInfo } from '../services/wordSearchingService';
+import { requestWordInfo, translateEnToJa } from '../services/wordSearchingService';
 
 interface AddWordFormProps {
   onSubmit: (formData: WordData) => Promise<boolean>; // handleAddWord関数を受け取る
@@ -22,6 +22,7 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
   const [addingWords, setAddingWords] = useState<[string, number][]>([]); // [英単語, 番号]の配列
   const [isSingleAddition, setIsSingleAddition] = useState<boolean>(true);
   const [isParallelAddition, setIsParallelAddition] = useState<boolean>(false);
+  const [isTranslating, setIsTranslating] = useState(false);
 
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const addButtonRef = useRef<HTMLButtonElement>(null);
@@ -620,10 +621,31 @@ export const AddWordForm: React.FC<AddWordFormProps> = ({ onSubmit, onCancel, wo
               placeholder="例: I eat an apple every day."
               rows={3}
             />
+            <div className="flex items-center gap-2 mt-2 mb-1">
+              <label className="text-sm font-medium text-gray-700">例文（日本語）</label>
+              <button
+                type="button"
+                disabled={isTranslating || !formData.exampleEnSentence}
+                onClick={async () => {
+                  setIsTranslating(true);
+                  try {
+                    const ja = await translateEnToJa(formData.exampleEnSentence);
+                    setFormData(prev => ({ ...prev, exampleJaSentence: ja }));
+                  } catch (e) {
+                    setError("翻訳に失敗しました");
+                  } finally {
+                    setIsTranslating(false);
+                  }
+                }}
+                className="px-2 py-0.5 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isTranslating ? "翻訳中..." : "英文を翻訳"}
+              </button>
+            </div>
             <textarea
               value={formData.exampleJaSentence}
               onChange={(e) => setFormData(prev => ({ ...prev, exampleJaSentence: e.target.value }))}
-              className="w-full mt-2 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
               placeholder="例: 私は毎日リンゴを食べます。"
               rows={3}
             />

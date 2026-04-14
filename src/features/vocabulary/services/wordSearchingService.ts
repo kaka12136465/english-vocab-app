@@ -1,5 +1,5 @@
 import { requestGemini } from "@/shared/ai/services/geminiRequestService";
-import { REQUEST_WORD_INFO_PROMPT } from "@/shared/ai/promps/vocabraryPrompts";
+import { REQUEST_TRANSLATE_PROMPT, REQUEST_WORD_INFO_PROMPT } from "@/shared/ai/promps/vocabraryPrompts";
 import { Word } from "@/types";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -87,21 +87,46 @@ export async function scrapeWord(word: string): Promise<ScrapingWordData> {
 }
 
 export const requestWordInfo = async (enWord: string): Promise<string> => {
-  try{
-    if(enWord.length > 100){
-      throw new Error("入力が長すぎます。100文字以下にしてください。");
-    }
-    const prompt = REQUEST_WORD_INFO_PROMPT(enWord);
-    const response = await requestGemini(prompt);
-    const match = response.match(/\{[\s\S]*\}/);
-    if (!match) {
-      throw new Error("AIからのレスポンスが不正です。");
-    }
-    return match[0];
-  }catch(err){
-    console.error(err);
+  if (enWord.length > 100) {
+    throw new Error("入力が長すぎます。100文字以下にしてください。");
+  }
+
+  // 辞書APIとAIを並列実行
+  const [dictResult, aiResult] = await Promise.allSettled([
+    scrapeWord(enWord),
+    (async () => {
+      const prompt = REQUEST_WORD_INFO_PROMPT(enWord);
+      const response = await requestGemini(prompt);
+      const match = response.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error("AIからのレスポンスが不正です。");
+      return JSON.parse(match[0]);
+    })(),
+  ]);
+
+  if (aiResult.status === 'rejected') {
+    console.error(aiResult.reason);
     throw new Error(enWord + "の日本語への翻訳に失敗しました");
   }
+
+  const wordInfo = aiResult.value;
+
+  // 辞書APIの結果で発音・類義語・対義語・例文を補完
+  if (dictResult.status === 'fulfilled' && dictResult.value.isFound) {
+    const dict = dictResult.value;
+    if (dict.pronunciation) wordInfo.pronunciation = dict.pronunciation;
+    if (dict.synonyms.size > 0) wordInfo.synonyms = [...dict.synonyms].slice(0, 5);
+    if (dict.antonyms.size > 0) wordInfo.antonyms = [...dict.antonyms].slice(0, 5);
+    if (dict.exampleSentence) wordInfo.exampleEnSentence = dict.exampleSentence;
+  }
+
+  return JSON.stringify(wordInfo);
+}
+
+export const translateEnToJa = async (text: string): Promise<string> => {
+  if (!text.trim()) throw new Error("翻訳する文章を入力してください");
+  const prompt = REQUEST_TRANSLATE_PROMPT(text);
+  const response = await requestGemini(prompt);
+  return response.trim();
 }
 
 export const addWordInfo = async (word: Word): Promise<void> => {
