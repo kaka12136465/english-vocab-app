@@ -242,6 +242,7 @@ export const LearningPage: React.FC<LearningPageProps> = ({ quizSetting, initial
           groupIndex={groupIndex}
           totalGroups={groups.length}
           isLastInGroup={memWordIndex === group.length - 1}
+          autoPlayAudio={quizSetting.autoPlayAudio ?? false}
           onNext={handleMemorizeNext}
         />
       </div>

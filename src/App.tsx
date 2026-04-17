@@ -10,6 +10,7 @@ import { useAuth } from './features/auth/hooks/useAuth';
 import { WordBooksPage } from './features/vocabulary/components/BookshelfPage';
 import { WordsPage } from './features/vocabulary/components/WordsPage';
 import { QuizSettingPage } from './features/quiz/components/QuizSettingPage';
+import { TranslationPage } from './features/translation/components/TranslationPage';
 
 function App() {
   const [user, setUser] = useState<User | null>(auth.currentUser);
@@ -40,6 +41,7 @@ function App() {
         <Route path="/quiz" element={ <QuizPage user={user}/> } />
         <Route path="/wordBooks" element={ <WordBooksPage user={user} />} />
         <Route  path="/wordBooks/words" element={ <WordsPage user={user}/> } />
+        <Route path="/translation" element={ <TranslationPage /> } />
       </Routes>
     </BrowserRouter>
   );

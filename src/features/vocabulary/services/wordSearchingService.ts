@@ -1,7 +1,7 @@
 import { requestGemini } from "@/shared/ai/services/geminiRequestService";
 import { REQUEST_TRANSLATE_PROMPT, REQUEST_WORD_INFO_PROMPT } from "@/shared/ai/promps/vocabraryPrompts";
-import { Word } from "@/types";
-import { doc, setDoc } from "firebase/firestore";
+import { Word, WordData } from "@/types";
+import { collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 // wordScrapingService.ts
@@ -86,12 +86,50 @@ export async function scrapeWord(word: string): Promise<ScrapingWordData> {
   };
 }
 
+/**
+ * Firestore の words コレクションから英単語を検索する（大文字小文字を考慮）
+ */
+const searchWordInFirestore = async (enWord: string): Promise<WordData | null> => {
+  // 大文字小文字のバリアントを順に試す
+  const variants = [...new Set([
+    enWord,
+    enWord.toLowerCase(),
+    enWord.charAt(0).toUpperCase() + enWord.slice(1).toLowerCase(),
+  ])];
+
+  for (const variant of variants) {
+    const q = query(collection(db, 'words'), where('english', '==', variant));
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      const data = snapshot.docs[0].data();
+      console.log(`"${enWord}" をFirestoreから取得しました`);
+      return {
+        english: data.english ?? enWord,
+        japanese: data.japanese ?? [],
+        synonyms: data.synonyms ?? [],
+        antonyms: data.antonyms ?? [],
+        exampleEnSentence: data.exampleEnSentence ?? '',
+        exampleJaSentence: data.exampleJaSentence ?? '',
+        partOfSpeech: data.partOfSpeech ?? [],
+        pronunciation: data.pronunciation ?? '',
+        index: 0, // 番号は呼び出し元で上書き
+        description: data.description ?? '',
+      };
+    }
+  }
+  return null;
+};
+
 export const requestWordInfo = async (enWord: string): Promise<string> => {
   if (enWord.length > 100) {
     throw new Error("入力が長すぎます。100文字以下にしてください。");
   }
 
-  // 辞書APIとAIを並列実行
+  // Step1: Firestore に既存データがあれば再利用
+  const dbWord = await searchWordInFirestore(enWord);
+  if (dbWord) return JSON.stringify(dbWord);
+
+  // Step2: 辞書APIとAIを並列実行
   const [dictResult, aiResult] = await Promise.allSettled([
     scrapeWord(enWord),
     (async () => {

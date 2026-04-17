@@ -25,6 +25,10 @@ export const HomePage: React.FC<HomePageProps> = ({user}) => {
           onClick={() => navigate("/quizSetting")}
           className="w-full py-4 px-6 bg-primary-600 text-white text-lg font-bold rounded-xl hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-300 transition-all shadow-lg hover:shadow-xl"
         >クイズ</button>
+        <button
+          onClick={() => navigate("/translation")}
+          className="w-full py-4 px-6 bg-primary-600 text-white text-lg font-bold rounded-xl hover:bg-primary-700 focus:outline-none focus:ring-4 focus:ring-primary-300 transition-all shadow-lg hover:shadow-xl"
+        >英文翻訳</button>
       </main>
     </div>
   );
