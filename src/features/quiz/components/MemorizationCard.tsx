@@ -9,8 +9,11 @@ interface MemorizationCardProps {
   groupIndex: number;   // 0-base
   totalGroups: number;
   isLastInGroup: boolean;
+  hasPrev?: boolean;
   autoPlayAudio?: boolean;
+  volume?: number;      // 0.0 〜 1.0
   onNext: () => void;
+  onPrev?: () => void;
 }
 
 export const MemorizationCard: React.FC<MemorizationCardProps> = ({
@@ -20,12 +23,15 @@ export const MemorizationCard: React.FC<MemorizationCardProps> = ({
   groupIndex,
   totalGroups,
   isLastInGroup,
+  hasPrev = false,
   autoPlayAudio = false,
+  volume = 1,
   onNext,
+  onPrev,
 }) => {
   // 単語が変わったときに自動再生
   useEffect(() => {
-    if (autoPlayAudio) playAudio(word.english);
+    if (autoPlayAudio) playAudio(word.english, 'en-US', volume);
   }, [word]);
 
   return (
@@ -48,7 +54,7 @@ export const MemorizationCard: React.FC<MemorizationCardProps> = ({
           <p className="text-3xl font-bold text-gray-800">{word.english}</p>
           <button
             type="button"
-            onClick={() => playAudio(word.english)}
+            onClick={() => playAudio(word.english, 'en-US', volume)}
             className="p-1.5 text-gray-400 hover:text-primary-600 transition-colors"
             title="音声を再生"
           >
@@ -81,13 +87,23 @@ export const MemorizationCard: React.FC<MemorizationCardProps> = ({
         )}
       </div>
 
-      <button
-        onClick={onNext}
-        autoFocus
-        className="w-full py-3 px-4 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
-      >
-        {isLastInGroup ? 'クイズを開始' : '次の単語へ'}
-      </button>
+      <div className="flex gap-3">
+        {hasPrev && onPrev && (
+          <button
+            onClick={onPrev}
+            className="flex-none py-3 px-5 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors"
+          >
+            ← 前へ
+          </button>
+        )}
+        <button
+          onClick={onNext}
+          autoFocus
+          className="flex-1 py-3 px-4 bg-primary-600 text-white font-medium rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+        >
+          {isLastInGroup ? 'クイズを開始' : '次の単語へ →'}
+        </button>
+      </div>
     </div>
   );
 };

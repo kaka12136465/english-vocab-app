@@ -151,6 +151,7 @@ export const QuizPage: React.FC<QuizPageProps> = ({ user }) => {
           resisterWordWeakness={resisterWordWeakness}
           userQuizData={userQuizData}
           autoPlayAudio={quizSetting.autoPlayAudio ?? false}
+          volume={quizSetting.audioVolume ?? 1}
         />
       </div>
     );

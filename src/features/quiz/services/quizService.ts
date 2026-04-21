@@ -73,17 +73,17 @@ export const checkCorrectTranslation = async (english: string, japanese: string)
 /**
  * 音声を再生（Web Speech API使用）
  */
-export const playAudio = (text: string, lang: string = 'en-US'): void => {
+export const playAudio = (text: string, lang: string = 'en-US', volume: number = 1): void => {
   if ('speechSynthesis' in window) {
     // 既存の音声を停止
     window.speechSynthesis.cancel();
-    
+
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang;
     utterance.rate = 0.8; // 少しゆっくり再生
     utterance.pitch = 1;
-    utterance.volume = 1;
-    
+    utterance.volume = Math.min(1, Math.max(0, volume));
+
     window.speechSynthesis.speak(utterance);
   } else {
     console.error('Web Speech API is not supported in this browser');

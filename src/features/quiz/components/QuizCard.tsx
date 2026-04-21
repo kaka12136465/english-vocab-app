@@ -16,6 +16,7 @@ interface QuizCardProps {
   resisterWordWeakness: (word:Word, isWeak: boolean) => Promise<void>;
   userQuizData: UserQuizData;
   autoPlayAudio?: boolean;
+  volume?: number;
 }
 
 export const QuizCard: React.FC<QuizCardProps> = ({
@@ -31,6 +32,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
   resisterWordWeakness,
   userQuizData,
   autoPlayAudio = false,
+  volume = 1,
 }) => {
 
   const [userAnswer, setUserAnswer] = useState('');
@@ -47,7 +49,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
     setIsSubmitted(false);
     setIsCorrect(null);
     setIsWeak(userQuizData.wordWeaknesses[question.word.id] ?? false);
-    if (autoPlayAudio) playAudio(question.word.english);
+    if (autoPlayAudio) playAudio(question.word.english, 'en-US', volume);
   }, [question]);
 
   useEffect(() => {
@@ -163,7 +165,7 @@ export const QuizCard: React.FC<QuizCardProps> = ({
               </p>
               <button
                 type="button"
-                onClick={() => playAudio(question.word.english)}
+                onClick={() => playAudio(question.word.english, 'en-US', volume)}
                 className="p-1.5 text-gray-400 hover:text-primary-600 transition-colors"
                 title="音声を再生"
               >

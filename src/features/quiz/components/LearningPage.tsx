@@ -190,6 +190,18 @@ export const LearningPage: React.FC<LearningPageProps> = ({ quizSetting, initial
     }
   };
 
+  // 暗記フェーズの「前の単語へ」
+  const handleMemorizePrev = () => {
+    if (memWordIndex > 0) {
+      setMemWordIndex((m) => m - 1);
+    } else if (groupIndex > 0) {
+      // グループ先頭なら前グループの末尾に戻る
+      const prevGroup = groups[groupIndex - 1];
+      setGroupIndex((g) => g - 1);
+      setMemWordIndex(prevGroup.length - 1);
+    }
+  };
+
   // 暗記フェーズの「次の単語へ」
   const handleMemorizeNext = () => {
     const group = groups[groupIndex];
@@ -242,8 +254,11 @@ export const LearningPage: React.FC<LearningPageProps> = ({ quizSetting, initial
           groupIndex={groupIndex}
           totalGroups={groups.length}
           isLastInGroup={memWordIndex === group.length - 1}
+          hasPrev={memWordIndex > 0 || groupIndex > 0}
           autoPlayAudio={quizSetting.autoPlayAudio ?? false}
+          volume={quizSetting.audioVolume ?? 1}
           onNext={handleMemorizeNext}
+          onPrev={handleMemorizePrev}
         />
       </div>
     );
@@ -275,6 +290,7 @@ export const LearningPage: React.FC<LearningPageProps> = ({ quizSetting, initial
           resisterWordWeakness={resisterWordWeakness}
           userQuizData={userQuizData}
           autoPlayAudio={quizSetting.autoPlayAudio ?? false}
+          volume={quizSetting.audioVolume ?? 1}
         />
       </div>
     );

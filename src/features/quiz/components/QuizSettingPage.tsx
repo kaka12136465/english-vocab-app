@@ -301,6 +301,22 @@ export const QuizSettingPage: React.FC<QuizSettingPageProps> = ({user}) => {
 							/>
 						</span>
 					</div>
+
+					<div className="flex items-center gap-3">
+						<span className="w-40 shrink-0">音量</span>
+						<input
+							type="range"
+							min={0}
+							max={1}
+							step={0.05}
+							value={quizSetting.audioVolume ?? 1}
+							onChange={(e) => setQuizSetting({...quizSetting, audioVolume: Number(e.target.value)})}
+							className="flex-1"
+						/>
+						<span className="w-10 text-sm text-gray-600 text-right">
+							{Math.round((quizSetting.audioVolume ?? 1) * 100)}%
+						</span>
+					</div>
 				</div>
 
 				{/* スタートボタン */}

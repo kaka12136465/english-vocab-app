@@ -44,6 +44,7 @@ export interface QuizSetting{
   includeWeak: boolean; // 苦手な単語を含めるか
   includeNotLearning: boolean; // 未学習の単語を含めるか
   autoPlayAudio: boolean; // 問題切替時に音声を自動再生するか
+  audioVolume: number;   // 音声の音量（0.0〜1.0）
 }
 
 // ユーザーごとのクイズデータ
@@ -65,6 +66,7 @@ export const emptyUserQuizData: UserQuizData ={
     includeNotWeak: true,
     includeWeak: true,
     autoPlayAudio: false,
+    audioVolume: 1,
   },
   wordWeaknesses: {},
   userName: "",
